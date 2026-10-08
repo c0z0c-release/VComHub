@@ -1,10 +1,10 @@
 {
     "bomFormat":  "CycloneDX",
     "specVersion":  "1.5",
-    "serialNumber":  "urn:uuid:2b3f868d-f8d6-4118-b8b7-2f722c2dca88",
+    "serialNumber":  "urn:uuid:d9cb8a87-facb-4b37-bfee-4d954cb42ade",
     "version":  1,
     "metadata":  {
-                     "timestamp":  "2026-10-08T05:47:02Z",
+                     "timestamp":  "2026-10-08T06:02:07Z",
                      "tools":  {
                                    "components":  [
                                                       {
@@ -30,7 +30,7 @@
                                        "bom-ref":  "vcomhub",
                                        "type":  "application",
                                        "name":  "VComHub",
-                                       "version":  "0.6.9",
+                                       "version":  "0.6.10",
                                        "description":  "Shares one physical COM port with several virtual COM ports (Windows tray application with embedded driver package)",
                                        "supplier":  {
                                                         "name":  "c0z0c",
@@ -43,21 +43,21 @@
                                        "hashes":  [
                                                       {
                                                           "alg":  "SHA-256",
-                                                          "content":  "b8a98364002dd90399e9a9db7472fc8f7cd1d1a9cd29c7f6b635ca57cdcabc2d"
+                                                          "content":  "55d097e1a1a7764f88251be96d693362e902f7ec9fcaf1277e7646c89a6a6819"
                                                       },
                                                       {
                                                           "alg":  "SHA-512",
-                                                          "content":  "b0d0242383e540abc9ddae6a2a7e26da5b551c185b4f329acf76d8b59c439f349dae5fa8946b16512799cd2dee1f3994e24e5e3b0fb4d17f9a5fdbcbc6382f56"
+                                                          "content":  "698c94e78bfcf026fee68f1792f687535fb4ab94bf4bcad402902183805d68b437e87d82ecbeaed80d51d555ada6ec882c9fec904cd18c88a7a19d39b1150ded"
                                                       }
                                                   ],
                                        "properties":  [
                                                           {
                                                               "name":  "file:name",
-                                                              "value":  "vcomhub-0.6.9.exe"
+                                                              "value":  "vcomhub-0.6.10.exe"
                                                           },
                                                           {
                                                               "name":  "source:commit",
-                                                              "value":  "2f4b54c5b15fbc9e044f52e0b7c241a0c5d6a674"
+                                                              "value":  "32cc41589778372a34af216e190fa1633038ddc3"
                                                           },
                                                           {
                                                               "name":  "source:uncommittedChanges",
@@ -84,17 +84,17 @@
                            "hashes":  [
                                           {
                                               "alg":  "SHA-256",
-                                              "content":  "63ac0109c5503b576ae27f343aa5a850fa8af5ea24c1af65cec978a41b27b333"
+                                              "content":  "711c8dba1ab2ba7104fdd798acfa56603faecf946f2c280f422182bcce7b5855"
                                           },
                                           {
                                               "alg":  "SHA-512",
-                                              "content":  "5fbba233b275cca1fd58a835d6562ba9f9d518970dc0c065821c87610dec310eca108784c7bb84d7f298b75e24c4d0410173ca4511dbbe30331a0ebbc066697a"
+                                              "content":  "58a045d8b1b1c0ba9dbc147336375b72f6dbfc49441f4096b0a2a7fdab96bc666b296e94b9f72fdff53a8d2dfb5cab59850c8619f33c8bf781b1e34962bcf7cd"
                                           }
                                       ],
                            "supplier":  {
                                             "name":  "c0z0c"
                                         },
-                           "version":  "0.6.9"
+                           "version":  "0.6.10"
                        },
                        {
                            "bom-ref":  "driver-inf",
@@ -125,11 +125,11 @@
                            "hashes":  [
                                           {
                                               "alg":  "SHA-256",
-                                              "content":  "17b82d8909188da5c09bb9c7f890269d308447d9d81be4bad16f1b758891ea9f"
+                                              "content":  "c0bb3e3bfc1e0378cbf3f00b23319464e7138895ae7569b56a192c9e3772392a"
                                           },
                                           {
                                               "alg":  "SHA-512",
-                                              "content":  "a9b8ccdeebe02d9ba5d3eff3c976e62417aa8ebbaacd6d7d712bacfff26707a0b60c6ab3183b634d0b71a08f3c802737624f9f1b5337ee109a06e02e72c5ff7b"
+                                              "content":  "df5492e548812fe08d47e65eb372e626db270eb4ef31135646f35d2232a0cdb7f2abf9c11c536d54fda1609dc80a360e283114b4e83a692862e0076763484a61"
                                           }
                                       ],
                            "supplier":  {
