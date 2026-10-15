@@ -190,6 +190,34 @@ VComHub needs a small Windows driver to create the virtual COM ports. The driver
 
 Release builds put `vcomhub-<version>.exe` and its `.sbom.json` in the `release` folder of the release repository.
 
+## Version history
+
+The version is `<major>.<minor>.<number of commits>`, so the last number grows with every change in the source repository. Newest first. Versions that were not published (0.6.12 – 0.6.17) are included in the next published one.
+
+### 0.6.18 (2026-10-15)
+
+- **Hang prevention**: Stop and Exit always finish. Exit escalates in three steps (normal stop → force-delete virtual COM that is still in use → forced close). If it had to be forced, the next launch shows a notice and a `.exit.log` file next to the ini says what to check. New `[Hub] ExitTimeoutMs` (3000–120000). A physical COM that does not respond is abandoned instead of blocking the others.
+- **Device loss and reconnect**: when a physical COM is unplugged (including USB drivers that keep returning success, such as Prolific), the tray tells you; the group reconnects automatically when the device comes back. Other groups keep working.
+- **Missing physical COM at Start**: that mapping is skipped (its virtual COM is not created) and the others start; it is connected automatically when the device appears.
+- Operations that overlap (for example Start while Stopping) answer "Busy" instead of waiting; the status text shows *Stopping*.
+- First run with an empty mapping no longer tries to AutoStart and shows a clear message instead.
+- Debug mode writes `vcomhub.debug.log` next to the exe (open/close/error/reconnect events and device-change notifications, no data bytes).
+- Debug CLI: `sim hang <COM> ctl|write|close on|off` for testing hang handling (with `--sim`).
+
+### 0.6.11 (2026-10-08)
+
+- Tray menu **About...**: version, build time, developer, homepage.
+- Version is now generated from the commit count; Debug builds show a trailing `d`.
+
+### 0.6.10 (2026-10-08)
+
+- Setup window layout fix: the buttons are no longer overlapped by the port list (taller window, clipped child controls).
+- Single executable with the driver package embedded; automatic elevation to administrator.
+- Several physical COM ports at once, each with several virtual COM ports; transparent relay of baud rate, line control, timeouts and modem lines.
+- Tray icon with RX (red) / TX (blue) blinking and a tooltip with byte counts.
+- Setup window, `AutoStart`, English / Korean UI (`language.json`), Debug CLI.
+- Software Bill of Materials (`.sbom.json`) for each exe.
+
 ## Contact
 
 c0z0c@hotmail.com
@@ -380,3 +408,31 @@ VirtualPorts=COM13
 | `VERSION.txt` | 버전, 소스 커밋, 빌드 시각, exe 의 SHA256 |
 
 Release 빌드는 `vcomhub-<버전>.exe` 와 `.sbom.json` 을 배포 저장소의 `release` 폴더에 넣습니다.
+
+## 버전 기록
+
+버전은 `<major>.<minor>.<커밋 수>` 이므로 소스 저장소에서 변경이 생길 때마다 마지막 숫자가 늘어납니다. 최신 버전이 위에 있습니다. 배포하지 않은 버전(0.6.12 ~ 0.6.17)의 변경은 다음 배포 버전에 포함되어 있습니다.
+
+### 0.6.18 (2026-10-15)
+
+- **행(hang) 방지**: 중지와 종료는 항상 끝납니다. 종료는 3단계로 단계적으로 강해집니다(정상 중지 → 사용 중인 가상 COM 강제 삭제 → 강제 닫기). 강제로 닫았다면 다음 실행 때 알려 주고, ini 옆의 `.exit.log` 파일에 확인할 내용이 남습니다. `[Hub] ExitTimeoutMs`(3000~120000) 추가. 응답이 없는 실제 COM 은 다른 그룹을 막지 않고 포기합니다.
+- **장치 분리와 재연결**: 실제 COM 이 뽑히면(분리돼도 성공을 계속 돌려주는 Prolific 같은 USB 드라이버 포함) 트레이로 알려 주고, 장치가 돌아오면 그 그룹을 자동으로 다시 연결합니다. 다른 그룹은 계속 동작합니다.
+- **시작할 때 실제 COM 이 없는 경우**: 그 매핑만 건너뛰고(가상 COM 은 만들지 않음) 나머지는 시작하며, 장치가 나타나면 자동으로 연결합니다.
+- 겹치는 작업(예: 중지 중에 시작)은 기다리지 않고 "작업 중" 안내를 하며, 상태 문구에 *Stopping* 이 표시됩니다.
+- 매핑이 비어 있는 첫 실행에서는 AutoStart 를 시도하지 않고 분명한 메시지를 보여 줍니다.
+- Debug 모드에서 exe 옆에 `vcomhub.debug.log` 를 기록합니다(열기/닫기/오류/재연결 이벤트와 장치 변경 알림, 데이터 바이트는 기록하지 않음).
+- Debug CLI: 행 처리 테스트용 `sim hang <COM> ctl|write|close on|off` (`--sim` 에서).
+
+### 0.6.11 (2026-10-08)
+
+- 트레이 메뉴 **정보...**(About): 버전, 빌드 시각, 개발자, 홈페이지.
+- 버전을 커밋 수로 자동 생성합니다. Debug 빌드는 끝에 `d` 가 붙습니다.
+
+### 0.6.10 (2026-10-08)
+
+- 설정 창 배치 수정: 버튼이 포트 목록에 가려지지 않습니다(창 높이 확대, 자식 컨트롤 클리핑).
+- 드라이버 패키지를 내장한 단일 exe, 관리자 권한 자동 요청.
+- 여러 실제 COM 을 동시에 처리하고 각각에 여러 가상 COM 을 연결. 보드레이트, 라인 제어, 타임아웃, 모뎀 신호를 투명하게 중계.
+- RX(빨강)/TX(파랑)로 깜빡이는 트레이 아이콘과 누적 바이트 툴팁.
+- 설정 창, `AutoStart`, 영어/한국어 UI(`language.json`), Debug CLI.
+- exe 마다 소프트웨어 자재 명세서(`.sbom.json`).
