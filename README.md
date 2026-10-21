@@ -2,17 +2,27 @@
 
 **English** | [한국어](#한국어)
 
-VComHub is a Windows tray application that **shares one physical COM port with several virtual COM ports**. Each serial program opens its own virtual COM port (for example `COM11`, `COM12`), and VComHub relays the data between them and the real device — all programs see what the device sends, and whatever any of them writes goes to the device.
+VComHub is a Windows tray application that **shares one physical COM port with several virtual COM ports** and **bridges UDP network traffic to virtual COM ports (UDP to VCOM)**.
+
+- **Physical COM Relay**: Each serial program opens its own virtual COM port (for example `COM11`, `COM12`), and VComHub relays the data between them and the real device — all programs see what the device sends, and whatever any of them writes goes to the device.
+- **UDP Virtual COM (Remote Serial over UDP)**: A serial program opens a virtual COM port (for example `COM20`), and VComHub transparently converts data to and from UDP datagrams over the network. This allows serial applications on different PCs or network-connected devices (e.g. ESP32, Arduino, industrial controllers) to communicate without physical serial cables.
 
 ```
+1. Physical COM sharing:
               ┌── COM11  ← program A
   COM6 ◄──►  VComHub ─┤
  (device)             └── COM12  ← program B
+
+2. UDP Virtual COM (Remote Serial over UDP):
+                            ┌── COM20  ← serial program
+  UDP :5001 ◄──►  VComHub ─┤
+ (network)                  └── Peers: 192.168.1.30:5001, ...
 ```
 
 - One executable. No installer: the driver package is embedded in the exe.
 - Several physical ports at once (for example `COM6 → COM11, COM12` and `COM7 → COM13`).
-- Transparent relay: baud rate, line control, timeouts and modem lines requested by a program on a virtual COM are applied to the physical COM.
+- **UDP Virtual COM ports**: bridge UDP datagrams to a virtual COM port (binds a unique local UDP port, sends to multiple remote `IP:port` peers, supports receive-only mode).
+- Transparent relay: baud rate, line control, timeouts and modem lines requested by a program on a virtual COM are handled cleanly.
 - Tray icon that blinks on RX (red) and TX (blue); a small Setup window instead of editing text files.
 
 ## Requirements
@@ -23,15 +33,31 @@ VComHub is a Windows tray application that **shares one physical COM port with s
 
 ## Quick start
 
-1. Run `vcomhub-<version>.exe` (for example `vcomhub-0.6.7.exe`) and accept the Windows administrator prompt. A tray icon appears (check the hidden-icons arrow `^` of the taskbar if you do not see it).
+### 1. Initial Setup (First Run)
+
+1. Run `vcomhub-<version>.exe` (for example `vcomhub-0.6.20.exe`) and accept the Windows administrator prompt. A tray icon appears (check the hidden-icons arrow `^` of the taskbar if you do not see it).
 2. On the **first run** the program creates two files **in the same folder as the exe**: `vcomhub.ini` (settings) and `language.json` (translations). A balloon tells you so. Keep the exe in a folder you can write to.
 3. Right-click (or click) the tray icon → **Install driver...** → read the dialog → **Yes**. This is needed once per PC (see [About the driver](#about-the-driver-and-security)).
-4. Tray icon → **Setup...** → select your physical COM port (for example `COM6`) → **Add virtual COM...** → type a number (`11` becomes `COM11`) → press Enter. Add as many as you need, then press **Apply**.
-5. Tray icon → **Start**. In your serial programs, open the virtual ports (`COM11`, `COM12`) instead of `COM6`.
+
+### 2. Mode A: Physical COM Sharing
+
+1. Tray icon → **Setup...** → select your physical COM port (for example `COM6`) → **Add virtual COM...** → type a number (`11` becomes `COM11`) → press Enter. Add as many as you need, then press **Apply**.
+2. Tray icon → **Start**. In your serial programs, open the virtual ports (`COM11`, `COM12`) instead of `COM6`.
+
+> Close any programs that use the physical port first: while VComHub is running it owns the physical COM port exclusively.
+
+### 3. Mode B: UDP Virtual COM (Remote Serial over UDP)
+
+1. Tray icon → **Create VCOM...** (or Tray icon → **Setup...** → select **UDP VCOM profiles** → **Add UDP VCOM...**).
+2. In the dialog:
+   - **Virtual COM name**: enter a free port name (for example `COM20`).
+   - **Local UDP port**: enter a port to listen on this PC (for example `5001`).
+   - **Remote IP:UDP port**: enter the destination `IP:port` (for example `192.168.1.30:5001`). Multiple peers can be comma-separated. Leave empty for receive-only mode.
+   - **Serial settings**: defaults to `115200 8 N 1` (accepted for serial program compatibility).
+3. Click **Create and start**.
+4. In your serial program (e.g. PuTTY, Tera Term, Python), open `COM20`. Serial writes are sent as UDP packets to the remote peer, and incoming UDP packets on port `5001` appear as incoming serial data.
 
 From now on the program starts relaying by itself whenever it is launched (`AutoStart`). The program does not start with Windows by itself: because it needs administrator rights, a shortcut in the Startup folder does not work. If you want that, create a task in Task Scheduler (trigger "At log on", "Run with highest privileges") that runs the exe.
-
-> Close the programs that use the physical port first: while VComHub is running it owns the physical COM port exclusively.
 
 ## Tray icon and menu
 
@@ -53,6 +79,7 @@ From now on the program starts relaying by itself whenever it is launched (`Auto
 |---|---|
 | **Start** / **Restart** | Reads `vcomhub.ini`, checks it, creates the virtual COM ports and starts relaying. While running it becomes **Restart** (it re-reads the ini); it reads **Restart (settings changed)** when the saved mappings differ from what is running. |
 | **Stop** | Stops relaying and deletes the virtual COM ports. If a program still has a virtual COM open, the program waits up to `StopTimeoutMs` and then tells you which ports are in use — close them and Stop again. |
+| **Create VCOM...** | Opens the wizard to quickly configure and start a new UDP Virtual COM port. |
 | **Setup...** | Opens the settings window (below). |
 | **Install driver...** / **Uninstall driver...** | Only shown when relevant. Uninstall is available while stopped. |
 | **Exit** | Stops relaying, then quits. |
@@ -70,15 +97,89 @@ Open it from the tray menu (**Setup...**). It reads `vcomhub.ini` **when it open
   - Select a virtual COM → **Change number...** or double-click it; **Delete** removes it. **Delete all mappings** removes every virtual COM of a physical COM.
   - Keyboard: `Insert` add, `F2` change, `Delete` delete.
   - `(not mapped)` = no virtual COM yet. `(not in the system)` = the ini lists a port that is not currently present (device unplugged).
+- **UDP VCOM profiles** – manage UDP-backed virtual COM ports in the tree:
+  - Select **UDP VCOM profiles** → **Add UDP VCOM...** (or press `Insert`) to create a new profile.
+  - Select an existing UDP VCOM → **Edit UDP VCOM** (or double-click / `F2`) to change its virtual COM name, local UDP port, remote peers, and serial settings.
+  - Select a UDP VCOM → **Delete** (or press `Delete`) to remove it.
+  - Each profile displays its local listening port and configured remote peers as child items in the tree. With no peers, it operates in receive-only mode.
 - Buttons
   - **Apply** – saves to `vcomhub.ini` **and applies it to the running program** (it restarts the relay if the mappings changed). No question is asked.
   - **Save** – saves to the ini and closes. If you saved changes while running, a balloon reminds you to use **Restart** from the tray menu. If there are no changes but a restart is pending, it asks whether to apply now.
   - **Cancel** – closes without saving (asks first if there are unapplied changes).
 - The status text under the buttons says whether a **Restart is needed** (the saved mappings differ from the running ones).
 
+## UDP Virtual COM (UDP to VCOM)
+
+VComHub allows you to create **UDP-backed virtual COM ports**. A serial program interacts with the virtual COM port (e.g. `COM20`) using standard Windows serial APIs, while VComHub transparently relays data to and from UDP datagrams over the network.
+
+```
++-------------------------------------------------------------+
+|                     Local Computer                          |
+|                                                             |
+|  [ Serial Application ] (PuTTY, Python, industrial software)|
+|           ▲                                                 |
+|           │ Read / Write (COM20)                            |
+|           ▼                                                 |
+|  [ Virtual COM Driver ] (VComHub Device)                    |
+|           ▲                                                 |
+|           │ Buffer (256 KiB TX Queue, 5 ms / 1200 B MTU)    |
+|           ▼                                                 |
+|  [ VComHub UDP Engine ]                                     |
+|     ▲                 │                                     |
+|  RX │                 │ TX (Fan-out)                        |
+|     │                 ▼                                     |
+|  LocalPort 5001   Remote Peers:                             |
++-----▲-----------------│-------------------------------------+
+      │                 │
+ (UDP Datagrams)        ├──────────────► Peer 1: 192.168.1.30:5001
+      │                 │
+      └─────────────────┴──────────────► Peer 2: 192.168.1.40:5001
+```
+
+### Key Capabilities & Use Cases
+
+- **PC-to-PC Serial Tunneling**: Run serial communications between applications on two different PCs over Ethernet or Wi-Fi without any physical null-modem or USB-to-serial cables.
+- **Embedded & IoT Devices**: Communicate with microcontrollers (ESP32, Arduino, Raspberry Pi) or Ethernet-to-serial converters that send/receive raw UDP datagrams. Legacy serial software on Windows can communicate with them as if connected to a real COM port.
+- **Multi-Peer Fan-Out**: When the serial program writes data, VComHub transmits the datagrams to **all** configured remote `IP:port` destinations simultaneously.
+- **Receive-Only Mode**: Leaving the remote peer list empty configures the virtual COM port as receive-only. It listens on the local UDP port and passes any incoming datagrams to the serial application without transmitting outbound packets.
+- **Serial API Compatibility**: Serial applications often configure line parameters (Baud rate, data bits, parity, stop bits). VComHub accepts these settings (defaulting to `115200 8 N 1`) so software does not fail. Since UDP carries raw byte payloads, these parameters do not alter UDP network transport.
+
+### Configuration Methods
+
+There are four ways to configure UDP virtual COM ports:
+
+1. **Tray Menu → Create VCOM...**:
+   Opens the "Create UDP VCOM" dialog directly. Enter the virtual COM name (e.g. `COM20`), local UDP port (e.g. `5001`), and remote peers (e.g. `192.168.1.30:5001`, comma-separated). Click **Create and start** to apply immediately.
+2. **Setup Window (`Setup...`)**:
+   Under the **UDP VCOM profiles** group in the tree, click **Add UDP VCOM...** (or press `Insert`). You can double-click existing ports to edit them or press `Delete` to remove them.
+3. **Configuration File (`vcomhub.ini`)**:
+   Define ports under `[Udp]` and their parameters under `[Udp.<COM>]` (see [`vcomhub.ini` reference](#vcomhubini-reference) below).
+4. **Debug CLI**:
+   Use `udp add <COM> <localPort> [peerIP:port,...] [baud dataBits parity stopBits]`, `udp set ...`, `udp remove <COM>`, and `udp list`.
+
+### Step-by-Step Example: Connecting Two PCs over UDP
+
+Suppose you want Program A on PC 1 to talk to Program B on PC 2 over your local network:
+
+| Setting | PC 1 (IP: `192.168.1.10`) | PC 2 (IP: `192.168.1.20`) |
+|---|---|---|
+| Virtual COM Port | `COM20` | `COM20` |
+| Local UDP Port | `5001` | `5001` |
+| Remote Peer(s) | `192.168.1.20:5001` | `192.168.1.10:5001` |
+| Serial Settings | `115200 8 N 1` | `115200 8 N 1` |
+
+1. On **PC 1**: Create `COM20`, local port `5001`, peer `192.168.1.20:5001`. Start VComHub.
+2. On **PC 2**: Create `COM20`, local port `5001`, peer `192.168.1.10:5001`. Start VComHub.
+3. Open `COM20` in PuTTY or your application on both PCs. Any data typed on PC 1 appears instantly on PC 2, and vice versa.
+
+### Firewall & Network Requirements
+
+- **Inbound UDP Traffic**: VComHub must be allowed to receive inbound UDP traffic on the configured local port. On startup, VComHub prompts to add an inbound Windows Firewall rule if UDP VCOM profiles are detected. You can also allow the port manually in Windows Defender Firewall.
+- **Routing & Subnets**: When communicating across routers, VLANs, or the Internet, configure port forwarding (NAT) on intermediate routers or connect via VPN.
+
 ## `vcomhub.ini` reference
 
-The file is next to the exe. You can edit it with Setup or by hand (Notepad). Lines starting with `;` are comments.
+The file is next to the exe. You can edit it with Setup or by hand (Notepad). Lines starting with `#` (or `;`) are comments; the file created on the first run has help and a sample mapping in `#` comments.
 
 ```ini
 [Hub]
@@ -96,6 +197,29 @@ VirtualPorts=COM11,COM12
 
 [Physical.COM7]
 VirtualPorts=COM13
+
+[Udp]
+# Comma-separated list of UDP virtual COM port names
+Ports=COM20,COM21
+
+[Udp.COM20]
+# Local UDP port to bind on this PC (1-65535, must be unique per profile)
+LocalPort=5001
+# Remote destinations in IP:port format. Separate multiple peers with '|'. Leave empty for receive-only.
+Peers=192.168.1.30:5001|192.168.1.40:5001
+# Virtual serial parameters for COM program compatibility (defaults: 115200 8 N 1)
+BaudRate=115200
+DataBits=8
+Parity=N
+StopBits=1
+
+[Udp.COM21]
+LocalPort=5002
+Peers=
+BaudRate=9600
+DataBits=8
+Parity=N
+StopBits=1
 ```
 
 | Key | Default | Meaning |
@@ -107,22 +231,28 @@ VirtualPorts=COM13
 | `[Hub] Language` | `en` | `en` or `kr` (see [Language](#language)). Anything else means `en`. |
 | `[Mappings] PhysicalPorts` | – | Comma-separated physical COM ports to relay. Empty means nothing to relay. |
 | `[Physical.<COM>] VirtualPorts` | – | Comma-separated virtual COM ports for that physical COM. One section per entry of `PhysicalPorts`. |
+| `[Udp] Ports` | – | Comma-separated UDP-backed virtual COM names (e.g. `COM20,COM21`). |
+| `[Udp.<COM>] LocalPort` | – | UDP port to bind on this PC (1–65535). Every UDP VCOM must use a different local port. |
+| `[Udp.<COM>] Peers` | empty | Remote IPv4 address and UDP port destinations (`IP:port`). Separate multiple entries with `|` in the ini; leave empty for receive-only. The Setup dialog accepts a comma-separated list. |
+| `[Udp.<COM>] BaudRate`, `DataBits`, `Parity`, `StopBits` | `115200`, `8`, `N`, `1` | Serial settings accepted from COM programs for compatibility. UDP carries datagrams, so these values do not affect network transport. |
 
 Rules (Start refuses to run and tells you what is wrong otherwise):
 
 - Every physical COM in `PhysicalPorts` must exist in Device Manager when you Start.
 - Virtual COM names must be **`COM<number>`** (for example `COM11`). Windows may rename other names, so they are rejected.
 - A virtual COM name may be used only once, must not be the name of a physical COM, and must not be a COM port that already exists on the PC (another device, another program's virtual port). VComHub never renames to avoid a clash — choose a free number.
-- A virtual COM belongs to exactly one physical COM.
-- Serial settings (baud rate, parity ...) are **not** in the ini: the program that opens a virtual COM sets them, and they are forwarded to the physical COM (identical requests are skipped; the last request wins).
+- A virtual COM belongs to exactly one physical COM or one UDP profile.
+- For physical COM mappings, serial settings are **not** in the ini: the program that opens a virtual COM sets them, and they are forwarded to the physical COM (identical requests are skipped; the last request wins). UDP VCOM serial compatibility settings are stored under `[Udp.<COM>]` and do not affect UDP transport.
+- UDP VCOM names must be unique across physical and UDP mappings, and UDP local port numbers must not be duplicated. The chosen local UDP port must also be available (not bound by another application) when Start runs.
+- Remote peers in `[Udp.<COM>] Peers` must be in `IPv4:port` format (for example `192.168.1.30:5001`). In the ini, separate multiple peers with `|`. Leave empty for receive-only mode.
 
 To apply a manual edit: **Restart** from the tray menu while running, or **Start** when stopped.
 
 ## How the relay behaves
 
-- Data received from the physical COM is copied to **every open** virtual COM of that group. Data written to any virtual COM goes to the physical COM in arrival order. Other groups are never affected.
+- **Physical COM Relay**: Data received from the physical COM is copied to **every open** virtual COM of that group. Data written to any virtual COM goes to the physical COM in arrival order. Other groups are never affected. If the physical COM fails or is unplugged, requests of that group finish with an error and the other groups keep working. After reconnecting the device, use **Restart**.
+- **UDP VCOM Relay**: A UDP VCOM receives datagrams sent to its configured local port and immediately pushes their bytes to the virtual COM receive queue (up to 64 KiB). Any packet arriving on the local port is accepted. Data written by the serial program to the virtual COM is queued (up to 256 KiB) and packaged into datagrams of up to 1200 bytes (or flushed after 5 ms idle) and sent asynchronously to every configured peer. UDP does not guarantee delivery or ordering. UDP VCOMs are independent of physical COM device arrival/removal events.
 - A virtual COM can be opened by **one program at a time**. A program that does not read its virtual COM has a 64 KiB receive queue; when it overflows that program gets an overrun error and nothing else is affected.
-- If the physical COM fails or is unplugged, requests of that group finish with an error and the other groups keep working. After reconnecting the device, use **Restart**.
 - Starting a second copy of the program does nothing (only one instance runs).
 
 ## Language
@@ -151,6 +281,8 @@ Set `Debug=true` (or start the exe with `--debug`) to get a console where you ca
 | `mapping option debug\|autostart on\|off` | Change `Debug` / `AutoStart` |
 | `config validate` | Check the ini and the system without starting |
 | `devices list` | COM ports of the PC |
+| `udp list` | List UDP VCOM profiles |
+| `udp add <COM> <localPort> [peerIP:port,...]` / `udp set ...` / `udp remove <COM>` | Manage UDP VCOM profiles; new profiles default to serial settings `115200 8 N 1`. |
 | `driver status`, `driver install`, `driver uninstall [purge]` | Driver package (no confirmation asked here; `purge` also deletes the ini) |
 | `selftest [echo]` | Self check of the relay (`echo` needs a device that answers on the physical COM) |
 | `setup` | Open the Setup window |
@@ -175,6 +307,10 @@ VComHub needs a small Windows driver to create the virtual COM ports. The driver
 | "Physical COM not found" after a reboot | USB serial adapters can appear after VComHub starts. AutoStart does not retry: plug the adapter in and use **Start**. |
 | Stop reports virtual COM ports in use | Close the serial programs that opened `COM11`, `COM12` ..., then Stop again. |
 | A serial program cannot open the physical COM | VComHub owns it while running. Open a virtual COM instead, or Stop. |
+| Start fails with duplicate UDP local port or bind error | Change the `LocalPort` in Setup or `vcomhub.ini`. Each UDP VCOM must use a unique local port (1–65535), and no other program on the PC may be using that port. |
+| Start fails with invalid peer format | Enter both IPv4 address and UDP port separated by a colon, for example `192.168.1.30:5001`. IP without a port is rejected. |
+| UDP VCOM reports error 1167 | Use VComHub 0.6.20 or newer. Debug mode records UDP socket and COM open status in `vcomhub.debug.log` next to the exe. |
+| UDP data is not received | Allow inbound UDP on the VCOM's configured local port in Windows Firewall and any network firewalls between the peers. VComHub prompts to add an inbound rule on startup if UDP VCOM profiles are detected, or you can allow it manually. |
 | No tray icon | Look in the hidden icons (`^`). Only one instance runs; a second start does nothing. |
 | The settings window or messages are in the wrong language | Set `Language=` in `vcomhub.ini` (`en` or `kr`) and restart the program. |
 
@@ -193,6 +329,13 @@ Release builds put `vcomhub-<version>.exe` and its `.sbom.json` in the `release`
 ## Version history
 
 The version is `<major>.<minor>.<number of commits>`, so the last number grows with every change in the source repository. Newest first. Versions that were not published (0.6.12 – 0.6.17) are included in the next published one.
+
+### 0.6.20 (2026-10-21)
+
+- **UDP virtual COM ports**: create UDP-backed COM ports from Setup or the Debug CLI. Each one binds a unique local UDP port, forwards received datagrams to its open serial program, and sends serial writes to multiple configured IP:port peers. An empty peer list makes a receive-only port. Serial settings default to `115200 8 N 1`; they are accepted for COM compatibility but do not change UDP transport.
+- Setup displays UDP VCOMs and their peers in a tree and supports adding, editing, and deleting profiles. The Debug CLI supports `udp list`, `udp add`, `udp set`, and `udp remove`.
+- Physical COM device-change notifications no longer mark UDP VCOMs disconnected. Added diagnostics for COM open requests, control-channel attachment, and returned Windows error codes.
+- The first-run `vcomhub.ini` includes help and a sample as `#` comments, including optional keys and defaults. The earlier `;` comment still works, and Setup preserves comments when saving.
 
 ### 0.6.18 (2026-10-15)
 
@@ -230,11 +373,27 @@ c0z0c@hotmail.com
 
 [English](#vcomhub) | **한국어**
 
-VComHub 는 **하나의 실제 COM 포트를 여러 가상 COM 포트로 나눠 쓰게 해 주는** Windows 트레이 프로그램입니다. 시리얼 프로그램마다 각자의 가상 COM(예: `COM11`, `COM12`)을 열면, VComHub 가 실제 장치와 데이터를 중계합니다. 모든 프로그램이 장치가 보낸 데이터를 받고, 어느 프로그램이 쓰든 장치로 전달됩니다.
+VComHub 는 **하나의 실제 COM 포트를 여러 가상 COM 포트로 나눠 쓰게 해 주는 물리 COM 중계** 기능과 **UDP 네트워크 통신을 가상 COM 포트로 연결해 주는 UDP 가상 COM(UDP to VCOM)** 기능을 제공하는 Windows 트레이 프로그램입니다.
+
+- **물리 COM 중계**: 시리얼 프로그램마다 각자의 가상 COM(예: `COM11`, `COM12`)을 열면, VComHub 가 실제 장치와 데이터를 중계합니다. 모든 프로그램이 장치가 보낸 데이터를 받고, 어느 프로그램이 쓰든 장치로 전달됩니다.
+- **UDP 가상 COM (원격 시리얼 over UDP)**: 시리얼 프로그램이 가상 COM(예: `COM20`)을 열면, VComHub 가 네트워크의 UDP 데이터그램과 시리얼 데이터를 상호 변환하여 투명하게 전달합니다. 물리 시리얼 케이블 없이도 네트워크(LAN/Wi-Fi)를 통해 서로 다른 PC 간 시리얼 통신을 하거나 UDP 기반 임베디드/IoT 장비(ESP32, Arduino, 산업용 컨트롤러 등)와 통신할 수 있습니다.
+
+```
+1. 실제 COM 포트 공유:
+              ┌── COM11  ← 프로그램 A
+  COM6 ◄──►  VComHub ─┤
+ (장치)               └── COM12  ← 프로그램 B
+
+2. UDP 가상 COM (원격 시리얼 over UDP):
+                            ┌── COM20  ← 시리얼 프로그램
+  UDP :5001 ◄──►  VComHub ─┤
+ (네트워크)                 └── 원격 피어: 192.168.1.30:5001, ...
+```
 
 - exe 하나로 동작합니다. 설치 프로그램이 없고 드라이버 패키지는 exe 안에 들어 있습니다.
 - 여러 실제 포트를 동시에 처리합니다 (예: `COM6 → COM11, COM12`, `COM7 → COM13`).
-- 투명 중계: 가상 COM 에서 프로그램이 요청한 보드레이트, 라인 제어, 타임아웃, 모뎀 신호가 실제 COM 에 적용됩니다.
+- **UDP 가상 COM 포트 지원**: UDP 데이터그램을 가상 COM 포트로 브리지(고유 로컬 UDP 포트 바인딩, 여러 원격 `IP:포트` 피어로의 동시 전송, 수신 전용 모드 지원).
+- 투명 중계: 가상 COM 에서 프로그램이 요청한 보드레이트, 라인 제어, 타임아웃, 모뎀 신호가 오류 없이 처리됩니다.
 - RX(빨강)/TX(파랑)로 깜빡이는 트레이 아이콘, 텍스트 파일 대신 쓰는 작은 설정(Setup) 창.
 
 ## 요구 사항
@@ -245,15 +404,31 @@ VComHub 는 **하나의 실제 COM 포트를 여러 가상 COM 포트로 나눠 
 
 ## 빠른 시작
 
-1. `vcomhub-<버전>.exe`(예: `vcomhub-0.6.7.exe`)를 실행하고 관리자 확인 창을 승인합니다. 트레이 아이콘이 생깁니다(안 보이면 작업 표시줄의 숨겨진 아이콘 `^` 를 확인하세요).
+### 1. 최초 설정 (첫 실행 시)
+
+1. `vcomhub-<버전>.exe`(예: `vcomhub-0.6.20.exe`)를 실행하고 관리자 확인 창을 승인합니다. 트레이 아이콘이 생깁니다(안 보이면 작업 표시줄의 숨겨진 아이콘 `^` 를 확인하세요).
 2. **처음 실행**하면 exe 와 **같은 폴더**에 `vcomhub.ini`(설정)와 `language.json`(번역)을 만들고 풍선으로 알려 줍니다. 쓸 수 있는 폴더에 두세요.
 3. 트레이 아이콘 → **드라이버 설치...**(영어 모드는 *Install driver...*) → 내용을 읽고 **예**. PC 당 한 번만 하면 됩니다([드라이버와 보안](#드라이버와-보안) 참고).
-4. 트레이 아이콘 → **설정...** → 실제 COM(예: `COM6`) 선택 → **가상 COM 추가...** → 번호 입력(`11` 은 `COM11`) → Enter. 필요한 만큼 추가하고 **적용**을 누릅니다.
-5. 트레이 아이콘 → **시작**. 시리얼 프로그램에서는 `COM6` 대신 가상 포트(`COM11`, `COM12`)를 엽니다.
 
-이후에는 프로그램을 실행하면 자동으로 중계를 시작합니다(`AutoStart`). Windows 로그인 때 자동으로 실행하려면 관리자 권한 때문에 시작 프로그램 폴더 바로가기로는 안 되고, "가장 높은 권한으로 실행"을 켠 작업 스케줄러가 필요합니다.
+### 2. 방식 A: 실제 물리 COM 포트 다중 가상화
+
+1. 트레이 아이콘 → **설정...** → 실제 COM(예: `COM6`) 선택 → **가상 COM 추가...** → 번호 입력(`11` 은 `COM11`) → Enter. 필요한 만큼 추가하고 **적용**을 누릅니다.
+2. 트레이 아이콘 → **시작**. 시리얼 프로그램에서는 `COM6` 대신 가상 포트(`COM11`, `COM12`)를 엽니다.
 
 > 실제 포트를 쓰던 프로그램은 먼저 닫으세요. VComHub 가 실행 중이면 실제 COM 을 단독으로 엽니다.
+
+### 3. 방식 B: UDP 가상 COM (원격 시리얼 over UDP)
+
+1. 트레이 아이콘 → **가상 COM 생성...** (또는 트레이 아이콘 → **설정...** → **UDP VCOM profiles** 선택 → **Add UDP VCOM...**).
+2. 대화상자에서 다음 항목을 입력합니다:
+   - **가상 COM 이름**: 비어 있는 가상 포트 이름 입력 (예: `COM20`).
+   - **로컬 UDP 포트**: 이 PC에서 수신 대기할 UDP 포트 입력 (예: `5001`).
+   - **원격 IP:UDP 포트**: 데이터를 보낼 상대방의 `IP:포트` 입력 (예: `192.168.1.30:5001`). 여러 피어는 쉼표로 구분하며, 비워 두면 수신 전용으로 동작합니다.
+   - **시리얼 설정**: 기본값 `115200 8 N 1` (시리얼 프로그램과의 호환을 위해 제공).
+3. **만들고 시작**(또는 저장 후 적용)을 누릅니다.
+4. 시리얼 프로그램(PuTTY, Tera Term, Python 등)에서 `COM20`을 엽니다. 프로그램에서 쓴 데이터는 상대방 피어로 UDP 전송되며, 로컬 포트 `5001`로 들어오는 UDP 패킷은 시리얼 수신 데이터로 전달됩니다.
+
+이후에는 프로그램을 실행하면 자동으로 중계를 시작합니다(`AutoStart`). Windows 로그인 때 자동으로 실행하려면 관리자 권한 때문에 시작 프로그램 폴더 바로가기로는 안 되고, "가장 높은 권한으로 실행"을 켠 작업 스케줄러가 필요합니다.
 
 ## 트레이 아이콘과 메뉴
 
@@ -275,6 +450,7 @@ VComHub 는 **하나의 실제 COM 포트를 여러 가상 COM 포트로 나눠 
 |---|---|
 | **시작** / **다시 시작** | `vcomhub.ini` 를 읽고 검사한 뒤 가상 COM 을 만들고 중계를 시작합니다. 실행 중에는 **다시 시작**(ini 를 다시 읽음)이 되고, 저장된 매핑이 실행 중인 것과 다르면 **다시 시작 (설정 변경됨)** 으로 표시됩니다. |
 | **중지** | 중계를 멈추고 가상 COM 을 지웁니다. 프로그램이 가상 COM 을 열고 있으면 `StopTimeoutMs` 까지 기다린 뒤 사용 중인 포트를 알려 줍니다. 그 프로그램을 닫고 다시 중지하세요. |
+| **가상 COM 생성...** | 새 UDP 가상 COM 포트를 빠르게 설정하고 시작하는 마법사를 엽니다. |
 | **설정...** | 설정 창을 엽니다(아래). |
 | **드라이버 설치...** / **드라이버 제거...** | 상황에 맞는 것만 보입니다. 제거는 중지 상태에서만 가능합니다. |
 | **종료** | 중계를 멈춘 뒤 종료합니다. |
@@ -292,15 +468,89 @@ VComHub 는 **하나의 실제 COM 포트를 여러 가상 COM 포트로 나눠 
   - 가상 COM 선택 → **번호 변경...** 또는 더블클릭, **삭제**. **매핑 전체 삭제**는 그 실제 COM 의 가상 COM 을 모두 지웁니다.
   - 키보드: `Insert` 추가, `F2` 변경, `Delete` 삭제.
   - `(매핑 없음)` = 아직 가상 COM 이 없음. `(시스템에 없음)` = ini 에는 있지만 지금 PC 에 없는 포트(장치를 뽑은 경우).
+- **UDP VCOM 프로파일** — 트리의 UDP VCOM 그룹에서 UDP 방식 가상 COM 포트를 관리합니다:
+  - **UDP VCOM profiles** 선택 → **Add UDP VCOM...**(또는 `Insert`)으로 새 프로파일을 만듭니다.
+  - 가상 COM 선택 → **Edit UDP VCOM**(또는 더블클릭 / `F2`)으로 가상 COM 이름, 로컬 UDP 포트, 원격 피어 목록, 시리얼 호환 설정을 수정합니다.
+  - 가상 COM 선택 → **삭제**(또는 `Delete`)로 프로파일을 삭제합니다.
+  - 각 프로파일 아래에 로컬 수신 포트와 원격 피어가 표시됩니다. 피어 목록이 비어 있으면 수신 전용으로 동작합니다.
 - 버튼
   - **적용** – `vcomhub.ini` 에 저장하고 **실행 중인 프로그램에도 반영**합니다(매핑이 바뀌었으면 중계를 다시 시작). 묻지 않습니다.
   - **저장** – ini 에만 저장하고 닫습니다. 실행 중에 변경을 저장하면 트레이 풍선으로 **다시 시작**이 필요하다고 알려 줍니다. 변경이 없는데 다시 시작이 필요한 상태면 지금 적용할지 묻습니다.
   - **취소** – 저장하지 않고 닫습니다(적용하지 않은 변경이 있으면 먼저 묻습니다).
 - 버튼 아래 상태 문구에 **다시 시작이 필요한지**(저장된 매핑이 실행 중인 것과 다른지) 나옵니다.
 
+## UDP 가상 COM (UDP to VCOM)
+
+VComHub는 **UDP 기반 가상 COM 포트**를 생성하는 기능을 제공합니다. 일반 시리얼 응용 프로그램은 표준 Windows 시리얼 API를 통해 가상 COM 포트(예: `COM20`)를 열어 통신하고, VComHub는 내부에서 시리얼 데이터와 네트워크의 UDP 데이터그램을 투명하게 상호 중계합니다.
+
+```
++-------------------------------------------------------------+
+|                          로컬 PC                            |
+|                                                             |
+|  [ 시리얼 응용 프로그램 ] (PuTTY, Python, 산업용 통신 도구) |
+|           ▲                                                 |
+|           │ 읽기 / 쓰기 (COM20)                             |
+|           ▼                                                 |
+|  [ 가상 COM 드라이버 ] (VComHub 가상 장치)                  |
+|           ▲                                                 |
+|           │ 내부 버퍼 (256 KiB 송신 큐, 5 ms / 1200 B MTU)  |
+|           ▼                                                 |
+|  [ VComHub UDP 엔진 ]                                       |
+|     ▲                 │                                     |
+|  수신│                 │ 송신 (팬아웃)                       |
+|     │                 ▼                                     |
+|  로컬 포트 5001   원격 피어 (Peers):                        |
++-----▲-----------------│-------------------------------------+
+      │                 │
+ (UDP 데이터그램)       ├──────────────► 피어 1: 192.168.1.30:5001
+      │                 │
+      └─────────────────┴──────────────► 피어 2: 192.168.1.40:5001
+```
+
+### 주요 기능 및 활용 분야
+
+- **PC 간 원격 시리얼 통신**: 물리 RS-232/USB 시리얼 케이블 연결 없이도 LAN 또는 Wi-Fi 네트워크를 통해 서로 다른 PC에 있는 시리얼 프로그램끼리 데이터를 주고받을 수 있습니다.
+- **임베디드 및 IoT 장비 연동**: UDP 데이터그램을 전송하는 마이크로컨트롤러(ESP32, Arduino, Raspberry Pi)나 산업용 시리얼-이더넷 컨버터와 Windows의 레거시 시리얼 프로그램을 손쉽게 연결할 수 있습니다.
+- **다중 피어 동시 송신 (팬아웃)**: 시리얼 프로그램이 가상 COM에 데이터를 쓰면 등록된 **모든** 원격 `IP:포트` 피어로 동일한 UDP 패킷을 동시에 전송합니다.
+- **수신 전용 모드**: 원격 피어 목록을 비워 두면 수신 전용 포트로 동작합니다. 지정된 로컬 UDP 포트로 들어오는 패킷을 받아 시리얼 프로그램으로 전달하며 외부로 패킷을 전송하지 않습니다.
+- **시리얼 속성 호환성**: 시리얼 프로그램이 호출하는 보드레이트, 데이터 비트, 패리티, 스톱 비트 등의 시리얼 포트 속성 변경 API를 오류 없이 수락·보관합니다(기본값: `115200 8 N 1`). UDP는 순수 바이트 페이로드를 전달하므로 네트워크 전송 자체에는 시리얼 물리 계층 타이밍이 적용되지 않습니다.
+
+### 설정 방법 4가지
+
+UDP 가상 COM 포트는 다음과 같은 방법으로 구성할 수 있습니다:
+
+1. **트레이 메뉴 → 가상 COM 생성... (Create VCOM...)**:
+   전용 생성 마법사 대화상자를 바로 엽니다. 가상 COM 이름(예: `COM20`), 로컬 UDP 포트(예: `5001`), 원격 피어(예: `192.168.1.30:5001`, 쉼표 구분)를 입력하고 **만들고 시작**을 누르면 즉시 생성되어 동작합니다.
+2. **설정 창 (`Setup...`)**:
+   트리 목록의 **UDP VCOM profiles** 그룹에서 **Add UDP VCOM...**(또는 `Insert` 키)을 눌러 추가합니다. 기존 포트를 더블클릭하거나 `F2`를 눌러 수정하고, `Delete`로 삭제할 수 있습니다.
+3. **설정 파일 (`vcomhub.ini`) 직접 편집**:
+   `[Udp]` 섹션과 포트별 `[Udp.<COM>]` 섹션을 정의합니다(아래 [`vcomhub.ini` 설명](#vcomhubini-설명) 참고).
+4. **Debug CLI 명령**:
+   `udp add <COM> <localPort> [peerIP:port,...] [baud dataBits parity stopBits]`, `udp set ...`, `udp remove <COM>`, `udp list` 명령을 사용합니다.
+
+### 2대 PC 간 연결 설정 예시
+
+PC 1의 프로그램 A와 PC 2의 프로그램 B를 네트워크로 연결하는 구성 예시입니다:
+
+| 설정 항목 | PC 1 (IP: `192.168.1.10`) | PC 2 (IP: `192.168.1.20`) |
+|---|---|---|
+| 가상 COM 포트 | `COM20` | `COM20` |
+| 로컬 UDP 포트 | `5001` | `5001` |
+| 원격 피어 (`IP:포트`) | `192.168.1.20:5001` | `192.168.1.10:5001` |
+| 시리얼 설정 | `115200 8 N 1` | `115200 8 N 1` |
+
+1. **PC 1**: `COM20`, 로컬 포트 `5001`, 원격 피어 `192.168.1.20:5001` 생성 후 시작.
+2. **PC 2**: `COM20`, 로컬 포트 `5001`, 원격 피어 `192.168.1.10:5001` 생성 후 시작.
+3. 양쪽 PC에서 터미널 프로그램(PuTTY 등)으로 `COM20`을 열면 한쪽에서 타이핑한 데이터가 다른 쪽에 즉시 표시됩니다.
+
+### 방화벽 및 네트워크 요구 사항
+
+- **인바운드 UDP 허용**: VComHub가 지정된 로컬 포트에서 UDP 데이터를 수신하려면 Windows 방화벽에서 인바운드가 허용되어야 합니다. UDP VCOM이 설정되어 있으면 실행 시 VComHub가 방화벽 인바운드 규칙 추가 여부를 묻는 대화상자를 띄우며, 수동으로 Windows Defender 방화벽에서 포트를 허용할 수도 있습니다.
+- **라우터 및 서브넷**: 서로 다른 서브넷이나 인터넷 환경에서는 중간 공유기/방화벽의 포트 포워딩(NAT) 또는 VPN 구성이 필요합니다.
+
 ## `vcomhub.ini` 설명
 
-exe 옆에 있습니다. 설정 창이나 메모장으로 고칠 수 있습니다. `;` 로 시작하는 줄은 주석입니다.
+exe 옆에 있습니다. 설정 창이나 메모장으로 고칠 수 있습니다. `#`(또는 `;`)로 시작하는 줄은 주석입니다. 처음 실행할 때 만든 파일에는 `#` 주석으로 도움말과 매핑 샘플이 들어 있습니다.
 
 ```ini
 [Hub]
@@ -318,6 +568,29 @@ VirtualPorts=COM11,COM12
 
 [Physical.COM7]
 VirtualPorts=COM13
+
+[Udp]
+# UDP 방식 가상 COM 이름 목록 (쉼표 구분)
+Ports=COM20,COM21
+
+[Udp.COM20]
+# 이 PC에서 바인딩할 고유 로컬 UDP 포트 (1-65535, 프로파일마다 고유해야 함)
+LocalPort=5001
+# 원격 목적지 IP:포트 목록. ini에서는 '|'로 구분하며, 비워 두면 수신 전용입니다.
+Peers=192.168.1.30:5001|192.168.1.40:5001
+# 시리얼 프로그램 호환용 가상 시리얼 속성 (기본값: 115200 8 N 1)
+BaudRate=115200
+DataBits=8
+Parity=N
+StopBits=1
+
+[Udp.COM21]
+LocalPort=5002
+Peers=
+BaudRate=9600
+DataBits=8
+Parity=N
+StopBits=1
 ```
 
 | 키 | 기본값 | 의미 |
@@ -329,22 +602,28 @@ VirtualPorts=COM13
 | `[Hub] Language` | `en` | `en` 또는 `kr`([언어](#언어) 참고). 다른 값은 `en` 으로 봅니다. |
 | `[Mappings] PhysicalPorts` | – | 중계할 실제 COM 을 쉼표로 나열합니다. 비어 있으면 중계할 것이 없습니다. |
 | `[Physical.<COM>] VirtualPorts` | – | 그 실제 COM 의 가상 COM 을 쉼표로 나열합니다. `PhysicalPorts` 의 항목마다 섹션이 하나씩 필요합니다. |
+| `[Udp] Ports` | – | UDP 방식 가상 COM 이름을 쉼표로 나열합니다 (예: `COM20,COM21`). |
+| `[Udp.<COM>] LocalPort` | – | 이 PC에서 바인딩할 UDP 포트(1–65535). UDP VCOM마다 서로 다른 고유 포트를 사용해야 합니다. |
+| `[Udp.<COM>] Peers` | 비어 있음 | 원격 IPv4 주소와 UDP 포트(`IP:포트`)입니다. ini에서는 여러 항목을 `|`로 구분하고, 설정 창에서는 쉼표로 구분합니다. 비어 있으면 수신 전용입니다. |
+| `[Udp.<COM>] BaudRate`, `DataBits`, `Parity`, `StopBits` | `115200`, `8`, `N`, `1` | COM 프로그램과의 호환을 위해 받는 가상 시리얼 설정입니다. UDP 전송에는 영향을 주지 않습니다. |
 
 규칙(어기면 시작하지 않고 무엇이 문제인지 알려 줍니다):
 
 - `PhysicalPorts` 의 실제 COM 은 시작할 때 장치관리자에 있어야 합니다.
 - 가상 COM 이름은 **`COM<번호>`**(예: `COM11`) 형식이어야 합니다. 다른 이름은 Windows 가 바꿀 수 있어 거부합니다.
 - 가상 COM 이름은 한 번만 쓸 수 있고, 실제 COM 이름과 같으면 안 되며, 이미 PC 에 있는 COM 포트(다른 장치, 다른 프로그램의 가상 포트)와 겹치면 안 됩니다. 충돌을 피해 자동으로 이름을 바꾸지 않으니 비어 있는 번호를 고르세요.
-- 가상 COM 하나는 실제 COM 하나에만 속합니다.
-- 시리얼 설정(보드레이트, 패리티 등)은 ini 에 없습니다. 가상 COM 을 여는 프로그램이 정하고, 그 요청이 실제 COM 에 전달됩니다(같은 요청은 건너뛰고, 마지막 요청이 적용됩니다).
+- 가상 COM 하나는 실제 COM 하나 또는 UDP 프로파일 하나에만 속합니다.
+- 실제 COM 매핑의 시리얼 설정(보드레이트, 패리티 등)은 ini 에 없습니다. 가상 COM 을 여는 프로그램이 정하고, 그 요청이 실제 COM 에 전달됩니다(같은 요청은 건너뛰고, 마지막 요청이 적용됩니다). UDP VCOM의 호환 설정은 `[Udp.<COM>]`에 저장되지만 UDP 전송에는 영향을 주지 않습니다.
+- UDP VCOM 이름은 실제 COM 매핑을 포함해 중복될 수 없고, UDP 로컬 포트도 서로 달라야 합니다. 시작할 때 해당 UDP 포트를 다른 프로그램이 사용하고 있지 않아야 합니다.
+- `[Udp.<COM>] Peers` 의 원격 주소는 반드시 `IPv4:포트` 형식(예: `192.168.1.30:5001`)이어야 합니다. ini에서는 여러 피어를 `|`로 구분하며, 비워 두면 수신 전용 모드로 동작합니다.
 
 직접 고친 내용을 적용하려면 실행 중에는 트레이 메뉴 **다시 시작**, 중지 상태에서는 **시작**을 누르세요.
 
 ## 중계 동작
 
-- 실제 COM 에서 받은 데이터는 그 그룹의 **열려 있는 모든** 가상 COM 에 복사됩니다. 어느 가상 COM 에서 쓴 데이터든 도착한 순서대로 실제 COM 으로 나갑니다. 다른 그룹에는 영향이 없습니다.
+- **물리 COM 중계**: 실제 COM 에서 받은 데이터는 그 그룹의 **열려 있는 모든** 가상 COM 에 복사됩니다. 어느 가상 COM 에서 쓴 데이터든 도착한 순서대로 실제 COM 으로 나갑니다. 다른 그룹에는 영향이 없습니다. 실제 COM 이 오류가 나거나 뽑히면 그 그룹의 요청이 오류로 끝나고 다른 그룹은 계속 동작합니다. 장치를 다시 연결한 뒤 **다시 시작**하세요.
+- **UDP VCOM 중계**: UDP VCOM은 지정된 로컬 포트로 수신된 UDP 데이터그램의 바이트를 즉시 열려 있는 시리얼 프로그램의 수신 큐(최대 64 KiB)로 전달합니다. 어느 IP에서 온 패킷이든 해당 로컬 포트의 패킷을 수락합니다. 시리얼 프로그램이 쓴 데이터는 송신 큐(최대 256 KiB)에 모여 최대 1200바이트(MTU 단편화 방지) 또는 5 ms 유휴 시간 후 설정된 모든 원격 피어(`IP:포트`)로 비동기 동시 전송(팬아웃)됩니다. 피어가 없으면 수신 전용으로 동작합니다. UDP는 전달이나 순서를 보장하지 않으며, 물리 COM 장치 연결/분리 이벤트와 독립적으로 동작합니다.
 - 가상 COM 은 **한 번에 한 프로그램**만 열 수 있습니다. 가상 COM 을 읽지 않는 프로그램은 64 KiB 수신 큐가 넘치면 그 프로그램만 오버런 오류를 받고 다른 곳에는 영향이 없습니다.
-- 실제 COM 이 오류가 나거나 뽑히면 그 그룹의 요청이 오류로 끝나고 다른 그룹은 계속 동작합니다. 장치를 다시 연결한 뒤 **다시 시작**하세요.
 - 프로그램을 두 번 실행해도 아무 일도 일어나지 않습니다(하나만 실행됩니다).
 
 ## 언어
@@ -370,6 +649,8 @@ VirtualPorts=COM13
 | `mapping option debug\|autostart on\|off` | `Debug` / `AutoStart` 변경 |
 | `config validate` | 시작하지 않고 ini 와 시스템을 검사 |
 | `devices list` | PC 의 COM 포트 |
+| `udp list` | UDP VCOM 설정 목록 |
+| `udp add <COM> <localPort> [peerIP:port,...]` / `udp set ...` / `udp remove <COM>` | UDP VCOM 추가·수정·삭제. 새 설정은 `115200 8 N 1` 을 기본으로 사용합니다. |
 | `driver status`, `driver install`, `driver uninstall [purge]` | 드라이버 패키지(여기서는 확인을 묻지 않음, `purge` 는 ini 도 삭제) |
 | `selftest [echo]` | 중계 자가 점검(`echo` 는 실제 COM 에 응답하는 장치 필요) |
 | `setup` | 설정 창 열기 |
@@ -394,6 +675,10 @@ VirtualPorts=COM13
 | 재부팅 후 "물리 COM 이 시스템에 없습니다" | USB 시리얼 어댑터가 VComHub 보다 늦게 나타날 수 있습니다. AutoStart 는 재시도하지 않으니 어댑터가 잡힌 뒤 **시작**을 누르세요. |
 | 중지할 때 가상 COM 이 사용 중이라고 나옴 | `COM11`, `COM12` ... 를 연 시리얼 프로그램을 닫고 다시 중지하세요. |
 | 시리얼 프로그램이 실제 COM 을 열지 못함 | 실행 중에는 VComHub 가 단독으로 엽니다. 가상 COM 을 열거나 중지하세요. |
+| UDP 로컬 포트 중복 또는 바인드 오류로 시작 실패 | 설정 창이나 `vcomhub.ini`에서 `LocalPort`를 변경하세요. 각 UDP VCOM마다 고유한 로컬 포트(1–65535)를 사용해야 하며, PC의 다른 프로그램이 해당 포트를 점유하고 있지 않아야 합니다. |
+| 원격 주소(Peer) 형식 오류로 시작 실패 | 콜론으로 구분된 IPv4 주소와 UDP 포트를 모두 입력해야 합니다(예: `192.168.1.30:5001`). 포트가 누락된 IP 단독 입력은 거부됩니다. |
+| UDP VCOM 을 열 때 오류 1167 | VComHub 0.6.20 이상을 사용하세요. Debug 모드에서는 exe 옆 `vcomhub.debug.log` 에 UDP 소켓과 COM 열기 상태가 기록됩니다. |
+| UDP 데이터가 수신되지 않음 | Windows 방화벽 및 피어 간 네트워크 방화벽에서 UDP VCOM의 로컬 포트 인바운드를 허용했는지 확인하세요. UDP VCOM이 설정되어 있으면 실행 시 VComHub가 방화벽 인바운드 규칙 추가 여부를 묻거나, 수동으로 규칙을 허용할 수 있습니다. |
 | 트레이 아이콘이 안 보임 | 숨겨진 아이콘(`^`)을 확인하세요. 프로그램은 하나만 실행되며 두 번째 실행은 아무 일도 하지 않습니다. |
 | 화면이나 메시지 언어가 다름 | `vcomhub.ini` 의 `Language=`(`en` 또는 `kr`)를 고치고 프로그램을 다시 시작하세요. |
 
@@ -412,6 +697,13 @@ Release 빌드는 `vcomhub-<버전>.exe` 와 `.sbom.json` 을 배포 저장소�
 ## 버전 기록
 
 버전은 `<major>.<minor>.<커밋 수>` 이므로 소스 저장소에서 변경이 생길 때마다 마지막 숫자가 늘어납니다. 최신 버전이 위에 있습니다. 배포하지 않은 버전(0.6.12 ~ 0.6.17)의 변경은 다음 배포 버전에 포함되어 있습니다.
+
+### 0.6.20 (2026-10-21)
+
+- **UDP 가상 COM 지원**: 설정 창이나 Debug CLI에서 UDP 방식 가상 COM을 만들 수 있습니다. 각 포트는 중복되지 않는 로컬 UDP 포트를 사용하고, 수신된 데이터그램은 열린 시리얼 프로그램으로 전달하며, 시리얼 프로그램이 보낸 데이터는 설정된 여러 IP:포트 peer로 전송합니다. peer가 없으면 수신 전용입니다. 시리얼 설정 기본값은 `115200 8 N 1`이며 UDP 전송 방식에는 영향을 주지 않습니다.
+- 설정 창 트리에 UDP VCOM과 peer 목록을 표시하며 추가·수정·삭제할 수 있습니다. Debug CLI에 `udp list`, `udp add`, `udp set`, `udp remove` 명령을 추가했습니다.
+- 물리 COM 장치 변경 알림이 UDP VCOM을 연결 끊김으로 표시하던 문제를 수정했습니다. COM 열기 요청, 제어 채널 연결, Windows 오류 코드 진단 로그를 추가했습니다.
+- 처음 실행할 때 만드는 `vcomhub.ini` 에 `#` 주석으로 키 설명과 기본값, 포트 매핑 샘플을 넣었습니다. 기존 `;` 주석도 동작하며 설정 창에서 저장해도 주석을 유지합니다.
 
 ### 0.6.18 (2026-10-15)
 

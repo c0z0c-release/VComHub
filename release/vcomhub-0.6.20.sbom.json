@@ -1,10 +1,10 @@
 {
     "bomFormat":  "CycloneDX",
     "specVersion":  "1.5",
-    "serialNumber":  "urn:uuid:0a67f9c4-18ad-4c2f-baed-0697b4a9c8fc",
+    "serialNumber":  "urn:uuid:bc0b797c-0c92-42df-ae37-bb6dceed4fed",
     "version":  1,
     "metadata":  {
-                     "timestamp":  "2026-10-15T23:25:09Z",
+                     "timestamp":  "2026-10-21T01:46:08Z",
                      "tools":  {
                                    "components":  [
                                                       {
@@ -30,7 +30,7 @@
                                        "bom-ref":  "vcomhub",
                                        "type":  "application",
                                        "name":  "VComHub",
-                                       "version":  "0.6.19",
+                                       "version":  "0.6.20",
                                        "description":  "Shares one physical COM port with several virtual COM ports (Windows tray application with embedded driver package)",
                                        "supplier":  {
                                                         "name":  "c0z0c",
@@ -43,25 +43,25 @@
                                        "hashes":  [
                                                       {
                                                           "alg":  "SHA-256",
-                                                          "content":  "8fe19c21c2be6c9807a30bd63608168284f0d2c80c6451c8b10b9371e6a8c2c7"
+                                                          "content":  "db1202b1cfdda836aec70c0f45c872578f8a3d39febfa4225bbcb85277b912a6"
                                                       },
                                                       {
                                                           "alg":  "SHA-512",
-                                                          "content":  "37c4d520c40ab7b2dc7d58e6054b20bdf6589fd3f833bcfa9a6f69d08ab822d67a7de8deff1392efc704598cb4fd16527c96894d8a1666ac9cfd9ea71e21d3fe"
+                                                          "content":  "83032ba97863ea9f6ee1f8689033b523e6f46e6b06aa62b350c64d18109975e82607a413de31e2d9786a40f004ee6ae3bff69f82ee22ccd1f16e377e9f4647a9"
                                                       }
                                                   ],
                                        "properties":  [
                                                           {
                                                               "name":  "file:name",
-                                                              "value":  "vcomhub-0.6.19.exe"
+                                                              "value":  "vcomhub-0.6.20.exe"
                                                           },
                                                           {
                                                               "name":  "source:commit",
-                                                              "value":  "98f1468c4b51e9aaf68832f18937023dea4787e2"
+                                                              "value":  "f954f7bc537cf17f34e49eae57c41a7e451b7103"
                                                           },
                                                           {
                                                               "name":  "source:uncommittedChanges",
-                                                              "value":  "false"
+                                                              "value":  "true"
                                                           },
                                                           {
                                                               "name":  "build:configuration",
@@ -84,17 +84,17 @@
                            "hashes":  [
                                           {
                                               "alg":  "SHA-256",
-                                              "content":  "ca2911f050c23126bb6cf30283be24b9a59f9e6dd47abaf1141adeb24827d7a2"
+                                              "content":  "af4eeb32a909a536f3c62113452aa548c4fef2fe9270015d50c9dea8ca7267e5"
                                           },
                                           {
                                               "alg":  "SHA-512",
-                                              "content":  "e533ff0bd5b274b888005e4a57e7ce40e045ee6e5e3b50170c817672780077f4b389a720dc92641a1add6c86ea248dd724d890a30f2dcf8c6bd279c968de47f3"
+                                              "content":  "1383bc12a9117280702289731854f3f0609e197ed6bc9a088f97be79d3c6ead9cbd8636c84d3561c188e08a4f8d9fb0bbab638f6e42caaf9961e42057bb49161"
                                           }
                                       ],
                            "supplier":  {
                                             "name":  "c0z0c"
                                         },
-                           "version":  "0.6.19"
+                           "version":  "0.6.20"
                        },
                        {
                            "bom-ref":  "driver-inf",
@@ -125,11 +125,11 @@
                            "hashes":  [
                                           {
                                               "alg":  "SHA-256",
-                                              "content":  "5b0c1b2e92335a3411b868f6032137ea03d67d594a52397ff66b42caa3015541"
+                                              "content":  "1ab5c45f0e2ce16d799cfae902905fa432db4450fbc796226610153c880267f5"
                                           },
                                           {
                                               "alg":  "SHA-512",
-                                              "content":  "c7ece4bd456d0e62d464ae532a059337b6bfdb49ee4fd5809146693d1175194a08f774b367411363f26d07bac70867ee736aa2561fd9e297b6937166c9cfd4ec"
+                                              "content":  "8c6f4c18eda5366336a789774e0da199893b97a5e2b928e14cfb6b5ddfd6ec6a56993d8297a5eff38a88bedd06200bc8f9c50adfe9a6065b8d28cf5a59e2145c"
                                           }
                                       ],
                            "supplier":  {
@@ -180,11 +180,11 @@
                            "hashes":  [
                                           {
                                               "alg":  "SHA-256",
-                                              "content":  "e25330176c3691b2d42c1b757c75471950d74f99e059af6302c09ea2a21b418c"
+                                              "content":  "1788b6dd60a43e7640464dd92072015ab1f1991414a10fadb339ddb0cff9556c"
                                           },
                                           {
                                               "alg":  "SHA-512",
-                                              "content":  "e86f29f26ef1e161615264fa1ce90f6cc072d94718e8cbad60de3589ca846586157f94b1887eef1c9337f89d2449ab5e57b4ef7744318a811fd02de0cc6bb3a5"
+                                              "content":  "f7fd2bcd014b388c5000330aa5dc0a8d71f31b651cb60a7af61c4a8f001dd12e349057da624f3b764f2052b8310aa27429027f41f80e2720ddd7ee343991491b"
                                           }
                                       ],
                            "supplier":  {
@@ -272,6 +272,26 @@
                                         }
                        },
                        {
+                           "bom-ref":  "dll-ole32.dll",
+                           "type":  "library",
+                           "name":  "ole32.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-oleaut32.dll",
+                           "type":  "library",
+                           "name":  "oleaut32.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
                            "bom-ref":  "dll-setupapi.dll",
                            "type":  "library",
                            "name":  "setupapi.dll",
@@ -295,6 +315,16 @@
                            "bom-ref":  "dll-user32.dll",
                            "type":  "library",
                            "name":  "user32.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-ws2_32.dll",
+                           "type":  "library",
+                           "name":  "ws2_32.dll",
                            "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
                            "scope":  "required",
                            "supplier":  {
@@ -329,9 +359,12 @@
                                                "dll-gdi32.dll",
                                                "dll-kernel32.dll",
                                                "dll-newdev.dll",
+                                               "dll-ole32.dll",
+                                               "dll-oleaut32.dll",
                                                "dll-setupapi.dll",
                                                "dll-shell32.dll",
                                                "dll-user32.dll",
+                                               "dll-ws2_32.dll",
                                                "msvc-static-runtime"
                                            ]
                          }
