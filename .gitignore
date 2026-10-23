@@ -1,0 +1,5 @@
+# Local development / temporary files
+dev_readme.md
+*.pyc
+__pycache__/
+

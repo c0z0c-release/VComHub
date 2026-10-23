@@ -48,7 +48,7 @@ VComHub is a Windows tray application that **shares one physical COM port with s
 
 ### 3. Mode B: UDP Virtual COM (Remote Serial over UDP)
 
-1. Tray icon → **Create VCOM...** (or Tray icon → **Setup...** → select **UDP VCOM profiles** → **Add UDP VCOM...**).
+1. Tray icon → **Setup...** → select **UDP VCOM profiles** → **Add UDP VCOM...**.
 2. In the dialog:
    - **Virtual COM name**: enter a free port name (for example `COM20`).
    - **Local UDP port**: enter a port to listen on this PC (for example `5001`).
@@ -79,7 +79,6 @@ From now on the program starts relaying by itself whenever it is launched (`Auto
 |---|---|
 | **Start** / **Restart** | Reads `vcomhub.ini`, checks it, creates the virtual COM ports and starts relaying. While running it becomes **Restart** (it re-reads the ini); it reads **Restart (settings changed)** when the saved mappings differ from what is running. |
 | **Stop** | Stops relaying and deletes the virtual COM ports. If a program still has a virtual COM open, the program waits up to `StopTimeoutMs` and then tells you which ports are in use — close them and Stop again. |
-| **Create VCOM...** | Opens the wizard to quickly configure and start a new UDP Virtual COM port. |
 | **Setup...** | Opens the settings window (below). |
 | **Install driver...** / **Uninstall driver...** | Only shown when relevant. Uninstall is available while stopped. |
 | **Exit** | Stops relaying, then quits. |
@@ -99,7 +98,8 @@ Open it from the tray menu (**Setup...**). It reads `vcomhub.ini` **when it open
   - `(not mapped)` = no virtual COM yet. `(not in the system)` = the ini lists a port that is not currently present (device unplugged).
 - **UDP VCOM profiles** – manage UDP-backed virtual COM ports in the tree:
   - Select **UDP VCOM profiles** → **Add UDP VCOM...** (or press `Insert`) to create a new profile.
-  - Select an existing UDP VCOM → **Edit UDP VCOM** (or double-click / `F2`) to change its virtual COM name, local UDP port, remote peers, and serial settings.
+  - Select an existing UDP VCOM → **Edit UDP VCOM...** (or double-click) to change its virtual COM name, local UDP port, remote peers, and serial settings. The same button edits the link when you select a peer line under a physical COM's virtual COM (**Edit UDP link...**).
+  - **Connect two UDP VCOMs on this PC** by dragging one onto the other (both get each other's `127.0.0.1:<port>` as a peer). Drag a UDP VCOM onto a physical COM or its virtual COM to share that physical COM over UDP. Select a peer line → **Remove peer** to disconnect.
   - Select a UDP VCOM → **Delete** (or press `Delete`) to remove it.
   - Each profile displays its local listening port and configured remote peers as child items in the tree. With no peers, it operates in receive-only mode.
 - Buttons
@@ -146,15 +146,13 @@ VComHub allows you to create **UDP-backed virtual COM ports**. A serial program 
 
 ### Configuration Methods
 
-There are four ways to configure UDP virtual COM ports:
+There are three ways to configure UDP virtual COM ports:
 
-1. **Tray Menu → Create VCOM...**:
-   Opens the "Create UDP VCOM" dialog directly. Enter the virtual COM name (e.g. `COM20`), local UDP port (e.g. `5001`), and remote peers (e.g. `192.168.1.30:5001`, comma-separated). Click **Create and start** to apply immediately.
-2. **Setup Window (`Setup...`)**:
-   Under the **UDP VCOM profiles** group in the tree, click **Add UDP VCOM...** (or press `Insert`). You can double-click existing ports to edit them or press `Delete` to remove them.
-3. **Configuration File (`vcomhub.ini`)**:
+1. **Setup Window (`Setup...`)**:
+   Under the **UDP VCOM profiles** group in the tree, click **Add UDP VCOM...** (or press `Insert`). Enter the virtual COM name (e.g. `COM20`), local UDP port (e.g. `5001`, or `auto`), and remote peers (e.g. `192.168.1.30:5001`, comma-separated). Select a UDP VCOM and click **Edit UDP VCOM...** (or double-click it) to change it, or press `Delete` to remove it.
+2. **Configuration File (`vcomhub.ini`)**:
    Define ports under `[Udp]` and their parameters under `[Udp.<COM>]` (see [`vcomhub.ini` reference](#vcomhubini-reference) below).
-4. **Debug CLI**:
+3. **Debug CLI**:
    Use `udp add <COM> <localPort> [peerIP:port,...] [baud dataBits parity stopBits]`, `udp set ...`, `udp remove <COM>`, and `udp list`.
 
 ### Step-by-Step Example: Connecting Two PCs over UDP
@@ -330,6 +328,11 @@ Release builds put `vcomhub-<version>.exe` and its `.sbom.json` in the `release`
 
 The version is `<major>.<minor>.<number of commits>`, so the last number grows with every change in the source repository. Newest first. Versions that were not published (0.6.12 – 0.6.17) are included in the next published one.
 
+### 0.7.28 (2026-10-23)
+
+- **Connect UDP VCOMs by dragging**: drag one UDP VCOM onto another on the same PC and they are connected (each gets the other's `127.0.0.1:<local port>` as a peer). One-to-many (star) and many-to-many (mesh) links are made by connecting several. `auto` picks a free local UDP port; connections bound to loopback only are not exposed to the network. Debug CLI: `udp connect|disconnect <A> <B>`, `udp add <COM> auto`.
+- **Share a physical COM over UDP**: drag a UDP VCOM onto a physical COM (or its virtual COM). Data from the device goes to the virtual COMs and to the UDP peers, and UDP data is written to the device. Only registered peers are accepted. The relay speed is applied when the physical COM is opened. When the last connection is removed the virtual COM becomes an ordinary one again.
+
 ### 0.6.20 (2026-10-21)
 
 - **UDP virtual COM ports**: create UDP-backed COM ports from Setup or the Debug CLI. Each one binds a unique local UDP port, forwards received datagrams to its open serial program, and sends serial writes to multiple configured IP:port peers. An empty peer list makes a receive-only port. Serial settings default to `115200 8 N 1`; they are accepted for COM compatibility but do not change UDP transport.
@@ -419,7 +422,7 @@ VComHub 는 **하나의 실제 COM 포트를 여러 가상 COM 포트로 나눠 
 
 ### 3. 방식 B: UDP 가상 COM (원격 시리얼 over UDP)
 
-1. 트레이 아이콘 → **가상 COM 생성...** (또는 트레이 아이콘 → **설정...** → **UDP VCOM profiles** 선택 → **Add UDP VCOM...**).
+1. 트레이 아이콘 → **설정...** → **UDP VCOM profiles** 선택 → **Add UDP VCOM...**.
 2. 대화상자에서 다음 항목을 입력합니다:
    - **가상 COM 이름**: 비어 있는 가상 포트 이름 입력 (예: `COM20`).
    - **로컬 UDP 포트**: 이 PC에서 수신 대기할 UDP 포트 입력 (예: `5001`).
@@ -450,7 +453,6 @@ VComHub 는 **하나의 실제 COM 포트를 여러 가상 COM 포트로 나눠 
 |---|---|
 | **시작** / **다시 시작** | `vcomhub.ini` 를 읽고 검사한 뒤 가상 COM 을 만들고 중계를 시작합니다. 실행 중에는 **다시 시작**(ini 를 다시 읽음)이 되고, 저장된 매핑이 실행 중인 것과 다르면 **다시 시작 (설정 변경됨)** 으로 표시됩니다. |
 | **중지** | 중계를 멈추고 가상 COM 을 지웁니다. 프로그램이 가상 COM 을 열고 있으면 `StopTimeoutMs` 까지 기다린 뒤 사용 중인 포트를 알려 줍니다. 그 프로그램을 닫고 다시 중지하세요. |
-| **가상 COM 생성...** | 새 UDP 가상 COM 포트를 빠르게 설정하고 시작하는 마법사를 엽니다. |
 | **설정...** | 설정 창을 엽니다(아래). |
 | **드라이버 설치...** / **드라이버 제거...** | 상황에 맞는 것만 보입니다. 제거는 중지 상태에서만 가능합니다. |
 | **종료** | 중계를 멈춘 뒤 종료합니다. |
@@ -470,7 +472,8 @@ VComHub 는 **하나의 실제 COM 포트를 여러 가상 COM 포트로 나눠 
   - `(매핑 없음)` = 아직 가상 COM 이 없음. `(시스템에 없음)` = ini 에는 있지만 지금 PC 에 없는 포트(장치를 뽑은 경우).
 - **UDP VCOM 프로파일** — 트리의 UDP VCOM 그룹에서 UDP 방식 가상 COM 포트를 관리합니다:
   - **UDP VCOM profiles** 선택 → **Add UDP VCOM...**(또는 `Insert`)으로 새 프로파일을 만듭니다.
-  - 가상 COM 선택 → **Edit UDP VCOM**(또는 더블클릭 / `F2`)으로 가상 COM 이름, 로컬 UDP 포트, 원격 피어 목록, 시리얼 호환 설정을 수정합니다.
+  - UDP VCOM 선택 → **UDP VCOM 편집...**(또는 더블클릭)으로 가상 COM 이름, 로컬 UDP 포트, 원격 피어 목록, 시리얼 호환 설정을 수정합니다. 실제 COM 의 가상 COM 아래 연결(peer) 줄을 선택하면 같은 버튼이 **UDP 연결 편집...** 이 됩니다.
+  - **같은 PC 의 UDP VCOM 두 개 연결**: 한 UDP VCOM 을 다른 UDP VCOM 위로 끌어 놓습니다(서로의 `127.0.0.1:<포트>` 가 상대 피어로 들어갑니다). UDP VCOM 을 실제 COM 이나 그 가상 COM 위로 끌어 놓으면 그 실제 COM 을 UDP 로 공유합니다. 연결(peer) 줄 선택 → **연결 대상 제거**로 해제합니다.
   - 가상 COM 선택 → **삭제**(또는 `Delete`)로 프로파일을 삭제합니다.
   - 각 프로파일 아래에 로컬 수신 포트와 원격 피어가 표시됩니다. 피어 목록이 비어 있으면 수신 전용으로 동작합니다.
 - 버튼
@@ -515,17 +518,15 @@ VComHub는 **UDP 기반 가상 COM 포트**를 생성하는 기능을 제공합�
 - **수신 전용 모드**: 원격 피어 목록을 비워 두면 수신 전용 포트로 동작합니다. 지정된 로컬 UDP 포트로 들어오는 패킷을 받아 시리얼 프로그램으로 전달하며 외부로 패킷을 전송하지 않습니다.
 - **시리얼 속성 호환성**: 시리얼 프로그램이 호출하는 보드레이트, 데이터 비트, 패리티, 스톱 비트 등의 시리얼 포트 속성 변경 API를 오류 없이 수락·보관합니다(기본값: `115200 8 N 1`). UDP는 순수 바이트 페이로드를 전달하므로 네트워크 전송 자체에는 시리얼 물리 계층 타이밍이 적용되지 않습니다.
 
-### 설정 방법 4가지
+### 설정 방법 3가지
 
 UDP 가상 COM 포트는 다음과 같은 방법으로 구성할 수 있습니다:
 
-1. **트레이 메뉴 → 가상 COM 생성... (Create VCOM...)**:
-   전용 생성 마법사 대화상자를 바로 엽니다. 가상 COM 이름(예: `COM20`), 로컬 UDP 포트(예: `5001`), 원격 피어(예: `192.168.1.30:5001`, 쉼표 구분)를 입력하고 **만들고 시작**을 누르면 즉시 생성되어 동작합니다.
-2. **설정 창 (`Setup...`)**:
-   트리 목록의 **UDP VCOM profiles** 그룹에서 **Add UDP VCOM...**(또는 `Insert` 키)을 눌러 추가합니다. 기존 포트를 더블클릭하거나 `F2`를 눌러 수정하고, `Delete`로 삭제할 수 있습니다.
-3. **설정 파일 (`vcomhub.ini`) 직접 편집**:
+1. **설정 창 (`Setup...`)**:
+   트리 목록의 **UDP VCOM profiles** 그룹에서 **Add UDP VCOM...**(또는 `Insert` 키)을 누릅니다. 가상 COM 이름(예: `COM20`), 로컬 UDP 포트(예: `5001`, 또는 `auto`), 원격 피어(예: `192.168.1.30:5001`, 쉼표 구분)를 입력합니다. UDP VCOM 을 선택하고 **UDP VCOM 편집...**(또는 더블클릭)으로 수정하고, `Delete`로 삭제합니다.
+2. **설정 파일 (`vcomhub.ini`) 직접 편집**:
    `[Udp]` 섹션과 포트별 `[Udp.<COM>]` 섹션을 정의합니다(아래 [`vcomhub.ini` 설명](#vcomhubini-설명) 참고).
-4. **Debug CLI 명령**:
+3. **Debug CLI 명령**:
    `udp add <COM> <localPort> [peerIP:port,...] [baud dataBits parity stopBits]`, `udp set ...`, `udp remove <COM>`, `udp list` 명령을 사용합니다.
 
 ### 2대 PC 간 연결 설정 예시
@@ -697,6 +698,11 @@ Release 빌드는 `vcomhub-<버전>.exe` 와 `.sbom.json` 을 배포 저장소�
 ## 버전 기록
 
 버전은 `<major>.<minor>.<커밋 수>` 이므로 소스 저장소에서 변경이 생길 때마다 마지막 숫자가 늘어납니다. 최신 버전이 위에 있습니다. 배포하지 않은 버전(0.6.12 ~ 0.6.17)의 변경은 다음 배포 버전에 포함되어 있습니다.
+
+### 0.7.28 (2026-10-23)
+
+- **드래그로 UDP VCOM 연결**: 같은 PC 의 UDP VCOM 하나를 다른 UDP VCOM 위로 끌어 놓으면 서로 연결됩니다(상대의 `127.0.0.1:<로컬 포트>` 가 피어로 들어갑니다). 여러 개를 연결해 1:N(스타), N:N(메시)을 만듭니다. `auto` 는 비어 있는 로컬 UDP 포트를 고르며, loopback 끼리만 연결된 포트는 네트워크에 노출되지 않습니다. Debug CLI: `udp connect|disconnect <A> <B>`, `udp add <COM> auto`.
+- **실제 COM 을 UDP 로 공유**: UDP VCOM 을 실제 COM(또는 그 가상 COM) 위로 끌어 놓습니다. 장치에서 온 데이터는 가상 COM 과 UDP 피어 양쪽으로, UDP 로 들어온 데이터는 장치로 전달됩니다. 등록된 피어의 데이터만 받습니다. 중계 속도는 실제 COM 을 열 때 적용됩니다. 마지막 연결이 사라지면 그 가상 COM 은 일반 가상 COM 으로 돌아갑니다.
 
 ### 0.6.20 (2026-10-21)
 
