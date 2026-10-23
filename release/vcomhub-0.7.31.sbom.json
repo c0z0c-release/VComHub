@@ -1,0 +1,383 @@
+{
+    "bomFormat":  "CycloneDX",
+    "specVersion":  "1.5",
+    "serialNumber":  "urn:uuid:7825c183-7bd9-473c-8e57-62c5c7fb3ed4",
+    "version":  1,
+    "metadata":  {
+                     "timestamp":  "2026-10-23T07:46:25Z",
+                     "tools":  {
+                                   "components":  [
+                                                      {
+                                                          "type":  "application",
+                                                          "name":  "make_sbom.ps1",
+                                                          "author":  "c0z0c"
+                                                      },
+                                                      {
+                                                          "type":  "application",
+                                                          "name":  "Microsoft C/C++ compiler (MSVC)",
+                                                          "version":  "14.51.36231",
+                                                          "author":  "Microsoft Corporation"
+                                                      },
+                                                      {
+                                                          "type":  "application",
+                                                          "name":  "Windows SDK",
+                                                          "version":  "10.0.28000.0",
+                                                          "author":  "Microsoft Corporation"
+                                                      }
+                                                  ]
+                               },
+                     "component":  {
+                                       "bom-ref":  "vcomhub",
+                                       "type":  "application",
+                                       "name":  "VComHub",
+                                       "version":  "0.7.31",
+                                       "description":  "Shares one physical COM port with several virtual COM ports (Windows tray application with embedded driver package)",
+                                       "supplier":  {
+                                                        "name":  "c0z0c",
+                                                        "contact":  [
+                                                                        {
+                                                                            "email":  "c0z0c@hotmail.com"
+                                                                        }
+                                                                    ]
+                                                    },
+                                       "hashes":  [
+                                                      {
+                                                          "alg":  "SHA-256",
+                                                          "content":  "fca8263d420a7f11edd5d2663a66b4aee15759f5cdd34e993c7efc677ed70a6a"
+                                                      },
+                                                      {
+                                                          "alg":  "SHA-512",
+                                                          "content":  "e91a75570535b93b3d67211c0803c2f6d15d1dd07984da84938b0b25f45f190af5f008148ea56b0bb375564cdc560370f34e2768d2e55b7d46bc7b96fd1d6b89"
+                                                      }
+                                                  ],
+                                       "properties":  [
+                                                          {
+                                                              "name":  "file:name",
+                                                              "value":  "vcomhub-0.7.31.exe"
+                                                          },
+                                                          {
+                                                              "name":  "source:commit",
+                                                              "value":  "e1bddc4e384133940827a9d48e161d644ae7f69c"
+                                                          },
+                                                          {
+                                                              "name":  "source:uncommittedChanges",
+                                                              "value":  "false"
+                                                          },
+                                                          {
+                                                              "name":  "build:configuration",
+                                                              "value":  "Release"
+                                                          },
+                                                          {
+                                                              "name":  "thirdParty:libraries",
+                                                              "value":  "none (the Microsoft C/C++ runtime is linked statically; the exe imports only Windows system DLLs)"
+                                                          }
+                                                      ]
+                                   }
+                 },
+    "components":  [
+                       {
+                           "bom-ref":  "driver-dll",
+                           "type":  "library",
+                           "name":  "VComHub.dll",
+                           "description":  "VComHub UMDF 2 virtual COM port driver (embedded in vcomhub.exe)",
+                           "scope":  "required",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-256",
+                                              "content":  "d8029687fc7129cd8f9841234283e4a4a09df1b495c16bfe21fbf26b4bb2a485"
+                                          },
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "6813a73887d577d3f089bab27d605a7741064a5e6318b1158f273b4c304b5a7004b7fc5a2f4b8bba6721d63721c27706d80b48c1bdfda3274f00119291a7b11b"
+                                          }
+                                      ],
+                           "supplier":  {
+                                            "name":  "c0z0c"
+                                        },
+                           "version":  "0.7.31"
+                       },
+                       {
+                           "bom-ref":  "driver-inf",
+                           "type":  "file",
+                           "name":  "VComHub.inf",
+                           "description":  "Driver installation information (embedded in vcomhub.exe)",
+                           "scope":  "required",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-256",
+                                              "content":  "d4fb6c2ca3eb267d421dadd1503eef5501a277ea83ea141a14e7256e6ae71bbc"
+                                          },
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "8fec7e2f2233ce5f88f2cc193c78ffd58ca7dc9a18a93bc1145e4fddcfe3d31f3f7a427a0cd4f6e10ba22a6d1d44330203528916ff51be185987b83367b34060"
+                                          }
+                                      ],
+                           "supplier":  {
+                                            "name":  "c0z0c"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "driver-cat",
+                           "type":  "file",
+                           "name":  "vcomhub.cat",
+                           "description":  "Signed driver package catalog (embedded in vcomhub.exe)",
+                           "scope":  "required",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-256",
+                                              "content":  "720282a2404eb576e10fe72dbc471d486620af51c79db011e28e01e42c110795"
+                                          },
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "3c637afae00f6fdfb015b5495bfce969d7936e19253fbe91f74e90ceec1118713ce521387a021abf9db09927b2a930f07e5ae5dcee249c70e009ce2acd1c4b48"
+                                          }
+                                      ],
+                           "supplier":  {
+                                            "name":  "c0z0c"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "signing-certificate",
+                           "type":  "file",
+                           "name":  "VComHub.cer",
+                           "description":  "Self-signed certificate that signs the driver package; Install driver registers it in the Trusted Root and Trusted Publishers stores (embedded in vcomhub.exe)",
+                           "scope":  "required",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-256",
+                                              "content":  "15743837ea710c2a18b32038d9c753826d24fb59e4de8e8eb206706117f331ca"
+                                          },
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "0fa4a14463ff43da669268257d7d5a67473f25222981ca770ef66fe0d5b422e9b1afc4fc3e323fcb71050133a2c6284a6afa62fa66a26edd6b039904e3ebcd0a"
+                                          }
+                                      ],
+                           "properties":  [
+                                              {
+                                                  "name":  "certificate:subject",
+                                                  "value":  "CN=VComHub Driver Signing, O=c0z0c, C=KR, E=c0z0c@hotmail.com"
+                                              },
+                                              {
+                                                  "name":  "certificate:thumbprint",
+                                                  "value":  "82B7C00C277D764F75EE49705EC8C72D51F208E0"
+                                              },
+                                              {
+                                                  "name":  "certificate:notBefore",
+                                                  "value":  "2026-10-08T00:23:44Z"
+                                              },
+                                              {
+                                                  "name":  "certificate:notAfter",
+                                                  "value":  "2036-10-08T00:33:44Z"
+                                              }
+                                          ]
+                       },
+                       {
+                           "bom-ref":  "resource-language",
+                           "type":  "data",
+                           "name":  "language.json",
+                           "description":  "Default translations (en, kr); written next to the exe on first run",
+                           "scope":  "required",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-256",
+                                              "content":  "aabda4c17ba7cbf75cb11116068b6662ccfa76c93632458666dc5f594d9d213c"
+                                          },
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "7e68abd9e2726846f0633005f8dc4ff98156a07cd4ae5b427ecb02425c9baeb34f8d9b1f043f0313246f585f8dd1d65907129e078e99d6317f42cf4bcf49d98a"
+                                          }
+                                      ],
+                           "supplier":  {
+                                            "name":  "c0z0c"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "resource-icon",
+                           "type":  "data",
+                           "name":  "vcomhub.ico",
+                           "description":  "Application icon",
+                           "scope":  "required",
+                           "hashes":  [
+                                          {
+                                              "alg":  "SHA-256",
+                                              "content":  "be4eb3046b00174b8314ad9113416920be0e885e06c7da7ca1b46019534bf6dd"
+                                          },
+                                          {
+                                              "alg":  "SHA-512",
+                                              "content":  "0a5fd6d574a28a6fe8f13857dd68f420b2905317a5dffae3f35ed5f3b6571d42fd43dc1157c6ca6b2e2f0332d3b173c4204f23670a3b9dac9068d490da2f1e52"
+                                          }
+                                      ],
+                           "supplier":  {
+                                            "name":  "c0z0c"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-advapi32.dll",
+                           "type":  "library",
+                           "name":  "advapi32.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-comctl32.dll",
+                           "type":  "library",
+                           "name":  "comctl32.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-crypt32.dll",
+                           "type":  "library",
+                           "name":  "crypt32.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-gdi32.dll",
+                           "type":  "library",
+                           "name":  "gdi32.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-kernel32.dll",
+                           "type":  "library",
+                           "name":  "kernel32.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-newdev.dll",
+                           "type":  "library",
+                           "name":  "newdev.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-ole32.dll",
+                           "type":  "library",
+                           "name":  "ole32.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-oleaut32.dll",
+                           "type":  "library",
+                           "name":  "oleaut32.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-setupapi.dll",
+                           "type":  "library",
+                           "name":  "setupapi.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-shell32.dll",
+                           "type":  "library",
+                           "name":  "shell32.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-user32.dll",
+                           "type":  "library",
+                           "name":  "user32.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-winhttp.dll",
+                           "type":  "library",
+                           "name":  "winhttp.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "dll-ws2_32.dll",
+                           "type":  "library",
+                           "name":  "ws2_32.dll",
+                           "description":  "Windows system library (part of the operating system; not redistributed with vcomhub.exe)",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        }
+                       },
+                       {
+                           "bom-ref":  "msvc-static-runtime",
+                           "type":  "library",
+                           "name":  "Microsoft C/C++ runtime (static)",
+                           "description":  "MSVC C runtime, vcruntime and C++ standard library, linked into vcomhub.exe (/MT). No separate runtime installation is needed.",
+                           "scope":  "required",
+                           "supplier":  {
+                                            "name":  "Microsoft Corporation"
+                                        },
+                           "version":  "14.51.36231"
+                       }
+                   ],
+    "dependencies":  [
+                         {
+                             "ref":  "vcomhub",
+                             "dependsOn":  [
+                                               "driver-dll",
+                                               "driver-inf",
+                                               "driver-cat",
+                                               "signing-certificate",
+                                               "resource-language",
+                                               "resource-icon",
+                                               "dll-advapi32.dll",
+                                               "dll-comctl32.dll",
+                                               "dll-crypt32.dll",
+                                               "dll-gdi32.dll",
+                                               "dll-kernel32.dll",
+                                               "dll-newdev.dll",
+                                               "dll-ole32.dll",
+                                               "dll-oleaut32.dll",
+                                               "dll-setupapi.dll",
+                                               "dll-shell32.dll",
+                                               "dll-user32.dll",
+                                               "dll-winhttp.dll",
+                                               "dll-ws2_32.dll",
+                                               "msvc-static-runtime"
+                                           ]
+                         }
+                     ]
+}
