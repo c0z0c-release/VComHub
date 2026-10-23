@@ -326,7 +326,17 @@ Release builds put `vcomhub-<version>.exe` and its `.sbom.json` in the `release`
 
 ## Version history
 
-The version is `<major>.<minor>.<number of commits>`, so the last number grows with every change in the source repository. Newest first. Versions that were not published (0.6.12 – 0.6.17) are included in the next published one.
+The version is `<major>.<minor>.<number of commits>`, so the last number grows with every change in the source repository. Newest first. Versions that were not published (0.6.12 – 0.6.17, 0.7.30) are included in the next published one.
+
+### 0.7.31 (2026-10-23)
+
+- **Run at Windows startup**: new Setup checkbox. Checking it puts a `VComHub.lnk` shortcut (pointing to the current exe) in the Startup folder of the current user; unchecking it removes the shortcut. The state is the shortcut itself, so it is not stored in `vcomhub.ini`, and deleting the shortcut by hand is reflected the next time Setup opens. Debug CLI: `mapping option runatlogon on|off`. VComHub needs administrator rights; if Windows does not start it at sign-in, use a Task Scheduler task instead (trigger "At log on", "Run with highest privileges").
+
+### 0.7.29 (2026-10-23)
+
+- **New version check and self-update**: tray menu **Check for updates...** looks up the latest release over HTTPS, shows the release notes link and **asks before downloading**. The download is verified (SHA-256, size, file type), then the exe is replaced in its own folder and VComHub restarts. If the folder is not writable, it tells you and stops without changing anything.
+- **AutoUpgrade**: new Setup checkbox (`[Hub] AutoUpgrade`, default off). When on, VComHub checks for a new version at launch once a month; it still asks before downloading. The time of the last check is kept in `[Hub] LastUpdateCheck`.
+- Debug CLI: `update status | check | apply`, `mapping option autoupgrade on|off`.
 
 ### 0.7.28 (2026-10-23)
 
@@ -697,7 +707,17 @@ Release 빌드는 `vcomhub-<버전>.exe` 와 `.sbom.json` 을 배포 저장소�
 
 ## 버전 기록
 
-버전은 `<major>.<minor>.<커밋 수>` 이므로 소스 저장소에서 변경이 생길 때마다 마지막 숫자가 늘어납니다. 최신 버전이 위에 있습니다. 배포하지 않은 버전(0.6.12 ~ 0.6.17)의 변경은 다음 배포 버전에 포함되어 있습니다.
+버전은 `<major>.<minor>.<커밋 수>` 이므로 소스 저장소에서 변경이 생길 때마다 마지막 숫자가 늘어납니다. 최신 버전이 위에 있습니다. 배포하지 않은 버전(0.6.12 ~ 0.6.17, 0.7.30)의 변경은 다음 배포 버전에 포함되어 있습니다.
+
+### 0.7.31 (2026-10-23)
+
+- **Windows 시작 시 실행**: 설정 창에 체크박스를 추가했습니다. 체크하면 현재 사용자의 시작 프로그램 폴더에 현재 exe 를 가리키는 `VComHub.lnk` 바로가기를 만들고, 해제하면 지웁니다. 상태는 바로가기 파일 자체이므로 `vcomhub.ini` 에는 저장하지 않으며, 바로가기를 직접 지워도 다음에 설정 창을 열 때 반영됩니다. Debug CLI: `mapping option runatlogon on|off`. VComHub 는 관리자 권한이 필요하므로 Windows 가 로그인 때 실행하지 않으면 작업 스케줄러("로그온할 때" 트리거, "가장 높은 권한으로 실행")를 대신 쓰세요.
+
+### 0.7.29 (2026-10-23)
+
+- **새 버전 확인과 자체 업데이트**: 트레이 메뉴 **새 버전 확인...**(영어 모드는 *Check for updates...*)이 HTTPS 로 최신 릴리스를 조회하고, 릴리스 노트 링크를 보여 주며 **받기 전에 묻습니다**. 받은 파일은 SHA-256, 크기, 파일 형식을 검증한 뒤 exe 가 있는 폴더에서 exe 를 교체하고 VComHub 를 다시 시작합니다. 폴더에 쓸 수 없으면 아무것도 바꾸지 않고 안내한 뒤 멈춥니다.
+- **AutoUpgrade**: 설정 창 체크박스 추가(`[Hub] AutoUpgrade`, 기본 꺼짐). 켜면 실행할 때 한 달에 한 번 새 버전을 확인하며, 받기 전에는 여전히 묻습니다. 마지막 확인 시각은 `[Hub] LastUpdateCheck` 에 기록합니다.
+- Debug CLI: `update status | check | apply`, `mapping option autoupgrade on|off`.
 
 ### 0.7.28 (2026-10-23)
 
