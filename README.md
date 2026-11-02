@@ -36,7 +36,7 @@ VComHub is a Windows tray application that **shares one physical COM port with s
 ### 1. Initial Setup (First Run)
 
 1. Run `vcomhub-<version>.exe` (for example `vcomhub-0.6.20.exe`) and accept the Windows administrator prompt. A tray icon appears (check the hidden-icons arrow `^` of the taskbar if you do not see it).
-2. On the **first run** the program creates two files **in the same folder as the exe**: `vcomhub.ini` (settings) and `language.json` (translations). A balloon tells you so. Keep the exe in a folder you can write to.
+2. On the **first run** the program creates two files **in the same folder as the exe**: `vcomhub.ini` (settings) and `VComHub_len.json` (translations). A balloon tells you so. Keep the exe in a folder you can write to.
 3. Right-click (or click) the tray icon → **Install driver...** → read the dialog → **Yes**. This is needed once per PC (see [About the driver](#about-the-driver-and-security)).
 
 ### 2. Mode A: Physical COM Sharing
@@ -91,6 +91,7 @@ Open it from the tray menu (**Setup...**). It reads `vcomhub.ini` **when it open
 
 - **Debug** – show the Debug CLI console at the next launch.
 - **AutoStart** – start relaying automatically when the program starts (applies from the next launch).
+- **Language** – choose the UI language from the languages found in `VComHub_len.json`; applies immediately and is saved to `[Hub] Language`.
 - **Port mapping** – the COM ports of Device Manager (VComHub's own virtual ports are not listed as physical ports). A physical COM with virtual COMs under it is a mapping.
   - Select a physical COM → **Add virtual COM...** or double-click it, then type the number.
   - Select a virtual COM → **Change number...** or double-click it; **Delete** removes it. **Delete all mappings** removes every virtual COM of a physical COM.
@@ -226,7 +227,7 @@ StopBits=1
 | `[Hub] AutoStart` | `true` | Start relaying when the program launches. If it fails (for example the device is not ready yet) it does **not** retry — use **Start**. |
 | `[Hub] TrayBlink` | `true` | Blink the tray icon on RX/TX. |
 | `[Hub] StopTimeoutMs` | `3000` | How long Stop waits for programs to close a virtual COM (0–60000 ms). |
-| `[Hub] Language` | `en` | `en` or `kr` (see [Language](#language)). Anything else means `en`. |
+| `[Hub] Language` | `en` | `en` or `ko` (see [Language](#language)). Anything else means `en`. |
 | `[Mappings] PhysicalPorts` | – | Comma-separated physical COM ports to relay. Empty means nothing to relay. |
 | `[Physical.<COM>] VirtualPorts` | – | Comma-separated virtual COM ports for that physical COM. One section per entry of `PhysicalPorts`. |
 | `[Udp] Ports` | – | Comma-separated UDP-backed virtual COM names (e.g. `COM20,COM21`). |
@@ -255,14 +256,14 @@ To apply a manual edit: **Restart** from the tray menu while running, or **Start
 
 ## Language
 
-The program speaks **English** by default. Set `Language=kr` in `vcomhub.ini` for Korean. The texts live in `language.json` (next to the exe, recreated on first run if missing):
+The program speaks **English** by default. Set `Language=ko` in `vcomhub.ini` for Korean, or pick the language in the **Language** drop-down of the Setup window (it applies immediately, no restart). The texts live in `VComHub_len.json` (next to the exe, recreated on first run if missing); the drop-down lists every top-level key of that file:
 
 ```json
 { "en": { "Already stopped.": "Already stopped." },
-  "kr": { "Already stopped.": "이미 중지 상태입니다." } }
+  "ko": { "Already stopped.": "이미 중지 상태입니다." } }
 ```
 
-To add a language, copy the `kr` section under a new name (for example `"ja"`), translate the **values** (keep the keys and the `{0}`, `{1}` placeholders), and set `Language=ja`. Missing texts fall back to English; a missing or broken `language.json` means English. Command names of the Debug CLI always stay English.
+To add a language, copy the `ko` section under a new name (for example `"ja"`), translate the **values** (keep the keys and the `{0}`, `{1}` placeholders), and pick it in Setup (or set `Language=ja`). Missing texts fall back to English; a missing or broken `VComHub_len.json` means English. Command names of the Debug CLI always stay English.
 
 ## Debug CLI
 
@@ -286,7 +287,7 @@ Set `Debug=true` (or start the exe with `--debug`) to get a console where you ca
 | `setup` | Open the Setup window |
 | `version` | Version |
 
-Command line options: `--ini <path>` use another ini (nothing is created automatically for an explicit path), `--debug` force the console, `--language-file <path>` use another `language.json`. `--sim` / `--sim-driver` run without real hardware / driver (for testing).
+Command line options: `--ini <path>` use another ini (nothing is created automatically for an explicit path), `--debug` force the console, `--language-file <path>` use another `VComHub_len.json`. `--sim` / `--sim-driver` run without real hardware / driver (for testing).
 
 ## About the driver and security
 
@@ -310,7 +311,7 @@ VComHub needs a small Windows driver to create the virtual COM ports. The driver
 | UDP VCOM reports error 1167 | Use VComHub 0.6.20 or newer. Debug mode records UDP socket and COM open status in `vcomhub.debug.log` next to the exe. |
 | UDP data is not received | Allow inbound UDP on the VCOM's configured local port in Windows Firewall and any network firewalls between the peers. VComHub prompts to add an inbound rule on startup if UDP VCOM profiles are detected, or you can allow it manually. |
 | No tray icon | Look in the hidden icons (`^`). Only one instance runs; a second start does nothing. |
-| The settings window or messages are in the wrong language | Set `Language=` in `vcomhub.ini` (`en` or `kr`) and restart the program. |
+| The settings window or messages are in the wrong language | Set `Language=` in `vcomhub.ini` (`en` or `ko`), or use the **Language** drop-down in Setup. It applies immediately. |
 
 ## Files
 
@@ -318,7 +319,7 @@ VComHub needs a small Windows driver to create the virtual COM ports. The driver
 |---|---|
 | `vcomhub-<version>.exe` | The program (driver package embedded). The file name does not matter to the program. |
 | `vcomhub.ini` | Settings (created next to the exe on first run) |
-| `language.json` | Translations (created next to the exe on first run) |
+| `VComHub_len.json` | Translations (created next to the exe on first run) |
 | `vcomhub-<version>.sbom.json` | Software Bill of Materials (CycloneDX 1.5) of that exe: embedded driver package and certificate with hashes, imported Windows DLLs, the statically linked Microsoft C/C++ runtime, build information. VComHub uses no third-party libraries. |
 | `VERSION.txt` | Version, source commit, build time and SHA256 of the exe |
 
@@ -326,7 +327,15 @@ Release builds put `vcomhub-<version>.exe` and its `.sbom.json` in the `release`
 
 ## Version history
 
-The version is `<major>.<minor>.<number of commits>`, so the last number grows with every change in the source repository. Newest first. Versions that were not published (0.6.12 – 0.6.17, 0.7.30) are included in the next published one.
+The version is `<major>.<minor>.<number of commits>`, so the last number grows with every change in the source repository. Newest first. Versions that were not published (0.6.12 – 0.6.17, 0.7.30, 0.7.32) are included in the next published one.
+
+### 0.7.33 (2026-11-03)
+
+- **Language selection in Setup**: a new **Language** drop-down lists every language found in the translation file. The change is saved to `[Hub] Language` and takes effect **immediately** (Setup window and tray menu), no restart needed. Debug CLI: `mapping option language <code>`.
+- **Translation file renamed** to `VComHub_len.json` (the old name was too generic and could collide with other programs). It is still created next to the exe on first run if missing. An old `language.json` is no longer read; copy your sections into `VComHub_len.json` if you added a language.
+- **Korean is now `ko`** (the standard language code) instead of `kr`. `Language=kr` in an existing `vcomhub.ini`, and a `"kr"` section in an old translation file, still work.
+- **Run at Windows startup** now uses a Task Scheduler task (trigger "At log on", "Run with highest privileges") instead of a Startup shortcut, so the administrator prompt no longer blocks it. An old Startup shortcut or Run key is cleaned up automatically.
+- Version 0.7.32 was not published; its changes are included here.
 
 ### 0.7.31 (2026-10-23)
 
@@ -420,7 +429,7 @@ VComHub 는 **하나의 실제 COM 포트를 여러 가상 COM 포트로 나눠 
 ### 1. 최초 설정 (첫 실행 시)
 
 1. `vcomhub-<버전>.exe`(예: `vcomhub-0.6.20.exe`)를 실행하고 관리자 확인 창을 승인합니다. 트레이 아이콘이 생깁니다(안 보이면 작업 표시줄의 숨겨진 아이콘 `^` 를 확인하세요).
-2. **처음 실행**하면 exe 와 **같은 폴더**에 `vcomhub.ini`(설정)와 `language.json`(번역)을 만들고 풍선으로 알려 줍니다. 쓸 수 있는 폴더에 두세요.
+2. **처음 실행**하면 exe 와 **같은 폴더**에 `vcomhub.ini`(설정)와 `VComHub_len.json`(번역)을 만들고 풍선으로 알려 줍니다. 쓸 수 있는 폴더에 두세요.
 3. 트레이 아이콘 → **드라이버 설치...**(영어 모드는 *Install driver...*) → 내용을 읽고 **예**. PC 당 한 번만 하면 됩니다([드라이버와 보안](#드라이버와-보안) 참고).
 
 ### 2. 방식 A: 실제 물리 COM 포트 다중 가상화
@@ -475,6 +484,7 @@ VComHub 는 **하나의 실제 COM 포트를 여러 가상 COM 포트로 나눠 
 
 - **Debug** – 다음 실행부터 Debug CLI 콘솔을 보입니다.
 - **AutoStart** – 프로그램을 시작할 때 자동으로 중계를 시작합니다(다음 실행부터 적용).
+- **Language** – `VComHub_len.json` 에 있는 언어 중에서 화면 언어를 고릅니다. 바로 적용되고 `[Hub] Language` 에 저장됩니다.
 - **포트 매핑** – 장치관리자의 COM 포트 목록입니다(VComHub 가 만든 가상 COM 은 실제 포트로 나오지 않습니다). 실제 COM 아래에 가상 COM 이 있는 것이 매핑입니다.
   - 실제 COM 선택 → **가상 COM 추가...** 또는 더블클릭 → 번호 입력.
   - 가상 COM 선택 → **번호 변경...** 또는 더블클릭, **삭제**. **매핑 전체 삭제**는 그 실제 COM 의 가상 COM 을 모두 지웁니다.
@@ -569,7 +579,7 @@ Debug=false
 AutoStart=true
 TrayBlink=true
 StopTimeoutMs=3000
-Language=kr
+Language=ko
 
 [Mappings]
 PhysicalPorts=COM6,COM7
@@ -610,7 +620,7 @@ StopBits=1
 | `[Hub] AutoStart` | `true` | 프로그램 시작 시 자동으로 중계를 시작합니다. 실패하면(예: 장치가 아직 준비되지 않음) **재시도하지 않으니** **시작**을 누르세요. |
 | `[Hub] TrayBlink` | `true` | RX/TX 로 트레이 아이콘을 깜빡입니다. |
 | `[Hub] StopTimeoutMs` | `3000` | 중지할 때 프로그램이 가상 COM 을 닫을 때까지 기다리는 시간(0~60000 ms). |
-| `[Hub] Language` | `en` | `en` 또는 `kr`([언어](#언어) 참고). 다른 값은 `en` 으로 봅니다. |
+| `[Hub] Language` | `en` | `en` 또는 `ko`([언어](#언어) 참고). 다른 값은 `en` 으로 봅니다. |
 | `[Mappings] PhysicalPorts` | – | 중계할 실제 COM 을 쉼표로 나열합니다. 비어 있으면 중계할 것이 없습니다. |
 | `[Physical.<COM>] VirtualPorts` | – | 그 실제 COM 의 가상 COM 을 쉼표로 나열합니다. `PhysicalPorts` 의 항목마다 섹션이 하나씩 필요합니다. |
 | `[Udp] Ports` | – | UDP 방식 가상 COM 이름을 쉼표로 나열합니다 (예: `COM20,COM21`). |
@@ -639,9 +649,9 @@ StopBits=1
 
 ## 언어
 
-기본은 **영어**입니다. 한국어로 쓰려면 `vcomhub.ini` 에 `Language=kr` 을 적습니다. 문구는 exe 옆의 `language.json` 에 있고, 없으면 첫 실행에 다시 만듭니다.
+기본은 **영어**입니다. 한국어로 쓰려면 `vcomhub.ini` 에 `Language=ko` 를 적거나 설정 창의 **Language** 드롭다운에서 고릅니다(재시작 없이 바로 적용). 문구는 exe 옆의 `VComHub_len.json` 에 있고(드롭다운에는 이 파일의 최상위 키가 모두 나옵니다), 없으면 첫 실행에 다시 만듭니다.
 
-새 언어를 추가하려면 `kr` 섹션을 새 이름(예: `"ja"`)으로 복사해 **값**을 번역하고(키와 `{0}`, `{1}` 자리표시자는 그대로 둠) `Language=ja` 로 지정합니다. 번역이 없는 문구는 영어로 나오고, `language.json` 이 없거나 깨졌으면 영어로 동작합니다. Debug CLI 의 명령 이름은 항상 영어입니다.
+새 언어를 추가하려면 `ko` 섹션을 새 이름(예: `"ja"`)으로 복사해 **값**을 번역하고(키와 `{0}`, `{1}` 자리표시자는 그대로 둠) 설정 창에서 고르거나 `Language=ja` 로 지정합니다. 번역이 없는 문구는 영어로 나오고, `VComHub_len.json` 이 없거나 깨졌으면 영어로 동작합니다. Debug CLI 의 명령 이름은 항상 영어입니다.
 
 ## Debug CLI
 
@@ -667,7 +677,7 @@ StopBits=1
 | `setup` | 설정 창 열기 |
 | `version` | 버전 |
 
-명령줄 옵션: `--ini <경로>` 다른 ini 사용(직접 지정한 경로는 자동으로 만들지 않음), `--debug` 콘솔 강제, `--language-file <경로>` 다른 `language.json` 사용. `--sim` / `--sim-driver` 는 실제 장치/드라이버 없이 실행(테스트용).
+명령줄 옵션: `--ini <경로>` 다른 ini 사용(직접 지정한 경로는 자동으로 만들지 않음), `--debug` 콘솔 강제, `--language-file <경로>` 다른 `VComHub_len.json` 사용. `--sim` / `--sim-driver` 는 실제 장치/드라이버 없이 실행(테스트용).
 
 ## 드라이버와 보안
 
@@ -691,7 +701,7 @@ StopBits=1
 | UDP VCOM 을 열 때 오류 1167 | VComHub 0.6.20 이상을 사용하세요. Debug 모드에서는 exe 옆 `vcomhub.debug.log` 에 UDP 소켓과 COM 열기 상태가 기록됩니다. |
 | UDP 데이터가 수신되지 않음 | Windows 방화벽 및 피어 간 네트워크 방화벽에서 UDP VCOM의 로컬 포트 인바운드를 허용했는지 확인하세요. UDP VCOM이 설정되어 있으면 실행 시 VComHub가 방화벽 인바운드 규칙 추가 여부를 묻거나, 수동으로 규칙을 허용할 수 있습니다. |
 | 트레이 아이콘이 안 보임 | 숨겨진 아이콘(`^`)을 확인하세요. 프로그램은 하나만 실행되며 두 번째 실행은 아무 일도 하지 않습니다. |
-| 화면이나 메시지 언어가 다름 | `vcomhub.ini` 의 `Language=`(`en` 또는 `kr`)를 고치고 프로그램을 다시 시작하세요. |
+| 화면이나 메시지 언어가 다름 | `vcomhub.ini` 의 `Language=`(`en` 또는 `ko`)를 고치거나 설정 창의 **Language** 드롭다운에서 고르세요. 바로 적용됩니다. |
 
 ## 파일
 
@@ -699,7 +709,7 @@ StopBits=1
 |---|---|
 | `vcomhub-<버전>.exe` | 프로그램(드라이버 패키지 내장). 파일 이름은 프로그램 동작과 무관합니다. |
 | `vcomhub.ini` | 설정(처음 실행할 때 exe 옆에 생성) |
-| `language.json` | 번역(처음 실행할 때 exe 옆에 생성) |
+| `VComHub_len.json` | 번역(처음 실행할 때 exe 옆에 생성) |
 | `vcomhub-<버전>.sbom.json` | 그 exe 의 소프트웨어 자재 명세서(SBOM, CycloneDX 1.5): 내장 드라이버 패키지와 인증서(해시 포함), 가져오는 Windows DLL, 정적으로 링크된 Microsoft C/C++ 런타임, 빌드 정보. VComHub 는 서드파티 라이브러리를 쓰지 않습니다. |
 | `VERSION.txt` | 버전, 소스 커밋, 빌드 시각, exe 의 SHA256 |
 
@@ -707,7 +717,15 @@ Release 빌드는 `vcomhub-<버전>.exe` 와 `.sbom.json` 을 배포 저장소�
 
 ## 버전 기록
 
-버전은 `<major>.<minor>.<커밋 수>` 이므로 소스 저장소에서 변경이 생길 때마다 마지막 숫자가 늘어납니다. 최신 버전이 위에 있습니다. 배포하지 않은 버전(0.6.12 ~ 0.6.17, 0.7.30)의 변경은 다음 배포 버전에 포함되어 있습니다.
+버전은 `<major>.<minor>.<커밋 수>` 이므로 소스 저장소에서 변경이 생길 때마다 마지막 숫자가 늘어납니다. 최신 버전이 위에 있습니다. 배포하지 않은 버전(0.6.12 ~ 0.6.17, 0.7.30, 0.7.32)의 변경은 다음 배포 버전에 포함되어 있습니다.
+
+### 0.7.33 (2026-11-03)
+
+- **설정 창에서 언어 선택**: **Language** 드롭다운에 번역 파일에 있는 모든 언어가 나옵니다. 선택하면 `[Hub] Language` 에 저장되고 설정 창과 트레이 메뉴에 **즉시** 적용됩니다(재시작 불필요). Debug CLI: `mapping option language <코드>`.
+- **번역 파일 이름을 `VComHub_len.json` 으로 변경**했습니다(예전 이름은 너무 일반적이라 다른 프로그램과 겹칠 수 있었습니다). 없으면 처음 실행할 때 exe 옆에 만들어지는 것은 같습니다. 예전 `language.json` 은 더 이상 읽지 않으므로 직접 언어를 추가했다면 `VComHub_len.json` 으로 옮기세요.
+- **한국어 코드를 `kr` 에서 `ko`**(표준 언어 코드)로 바꿨습니다. 기존 `vcomhub.ini` 의 `Language=kr` 과 예전 번역 파일의 `"kr"` 섹션도 그대로 동작합니다.
+- **Windows 시작 시 실행**을 시작 프로그램 바로가기 대신 작업 스케줄러 작업("로그온할 때" 트리거, "가장 높은 권한으로 실행")으로 등록합니다. 관리자 권한 때문에 실행이 막히지 않습니다. 예전 시작 프로그램 바로가기와 Run 키는 자동으로 정리합니다.
+- 배포하지 않은 0.7.32 의 변경을 포함합니다.
 
 ### 0.7.31 (2026-10-23)
 
