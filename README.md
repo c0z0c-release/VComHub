@@ -224,6 +224,7 @@ StopBits=1
 | Key | Default | Meaning |
 |---|---|---|
 | `[Hub] Debug` | `false` | `true` opens a console with the [Debug CLI](#debug-cli) at the next launch. |
+| `[Hub] LogLevel` | `off` | `off`, `error`, `warn`, `info` or `debug`. When not `off`, each run writes a `YYYYMMDD_HHMMSS.log` file to the `log` folder next to the exe (no data bytes), and crashes are captured there with a dump (`.dmp`). A log that does not end with `VComHub exiting normally` means the process did not exit cleanly. Turn it on only when you need to investigate; changing it in Setup applies immediately. |
 | `[Hub] AutoStart` | `true` | Start relaying when the program launches. If it fails (for example the device is not ready yet) it does **not** retry — use **Start**. |
 | `[Hub] TrayBlink` | `true` | Blink the tray icon on RX/TX. |
 | `[Hub] StopTimeoutMs` | `3000` | How long Stop waits for programs to close a virtual COM (0–60000 ms). |
@@ -308,7 +309,7 @@ VComHub needs a small Windows driver to create the virtual COM ports. The driver
 | A serial program cannot open the physical COM | VComHub owns it while running. Open a virtual COM instead, or Stop. |
 | Start fails with duplicate UDP local port or bind error | Change the `LocalPort` in Setup or `vcomhub.ini`. Each UDP VCOM must use a unique local port (1–65535), and no other program on the PC may be using that port. |
 | Start fails with invalid peer format | Enter both IPv4 address and UDP port separated by a colon, for example `192.168.1.30:5001`. IP without a port is rejected. |
-| UDP VCOM reports error 1167 | Use VComHub 0.6.20 or newer. Debug mode records UDP socket and COM open status in `vcomhub.debug.log` next to the exe. |
+| UDP VCOM reports error 1167 | Use VComHub 0.6.20 or newer. The log (off by default; set `LogLevel=info` or `debug` when you need it) records UDP socket and COM open status in the `log` folder next to the exe. |
 | UDP data is not received | Allow inbound UDP on the VCOM's configured local port in Windows Firewall and any network firewalls between the peers. VComHub prompts to add an inbound rule on startup if UDP VCOM profiles are detected, or you can allow it manually. |
 | No tray icon | Look in the hidden icons (`^`). Only one instance runs; a second start does nothing. |
 | The settings window or messages are in the wrong language | Set `Language=` in `vcomhub.ini` (`en` or `ko`), or use the **Language** drop-down in Setup. It applies immediately. |
@@ -322,66 +323,62 @@ VComHub needs a small Windows driver to create the virtual COM ports. The driver
 | `VComHub_len.json` | Translations (created next to the exe on first run) |
 | `vcomhub-<version>.sbom.json` | Software Bill of Materials (CycloneDX 1.5) of that exe: embedded driver package and certificate with hashes, imported Windows DLLs, the statically linked Microsoft C/C++ runtime, build information. VComHub uses no third-party libraries. |
 | `VERSION.txt` | Version, source commit, build time and SHA256 of the exe |
+| `log\` | Log files and crash dumps (created only while `LogLevel` is not `off`; old files are pruned automatically) |
 
 Release builds put `vcomhub-<version>.exe` and its `.sbom.json` in the `release` folder of the release repository.
 
 ## Version history
 
-The version is `<major>.<minor>.<number of commits>`, so the last number grows with every change in the source repository. Newest first. Versions that were not published (0.6.12 – 0.6.17, 0.7.30, 0.7.32) are included in the next published one.
+Version numbers follow major.minor.patch.build, where the build number is the source commit count. Releases up to 0.7.33 used major.minor.build. Newest first. Builds that were not published (0.6.12 – 0.6.17, 0.7.30, 0.7.32) are included in the next published release.
+
+### 0.8.1.35 (2026-11-20)
+
+- Added features for debugging.
 
 ### 0.7.33 (2026-11-03)
 
-- **Language selection in Setup**: a new **Language** drop-down lists every language found in the translation file. The change is saved to `[Hub] Language` and takes effect **immediately** (Setup window and tray menu), no restart needed. Debug CLI: `mapping option language <code>`.
-- **Translation file renamed** to `VComHub_len.json` (the old name was too generic and could collide with other programs). It is still created next to the exe on first run if missing. An old `language.json` is no longer read; copy your sections into `VComHub_len.json` if you added a language.
-- **Korean is now `ko`** (the standard language code) instead of `kr`. `Language=kr` in an existing `vcomhub.ini`, and a `"kr"` section in an old translation file, still work.
-- **Run at Windows startup** now uses a Task Scheduler task (trigger "At log on", "Run with highest privileges") instead of a Startup shortcut, so the administrator prompt no longer blocks it. An old Startup shortcut or Run key is cleaned up automatically.
-- Version 0.7.32 was not published; its changes are included here.
+- **Language selection** in Setup, applied instantly without a restart.
+- **Translation file renamed** to VComHub_len.json; custom languages added to the old file must be migrated. Korean now uses the standard code "ko"; existing "kr" settings remain supported.
+- **Run at Windows startup** now uses a Task Scheduler task with highest privileges, replacing the Startup shortcut. Legacy entries are cleaned up automatically.
 
 ### 0.7.31 (2026-10-23)
 
-- **Run at Windows startup**: new Setup checkbox. Checking it puts a `VComHub.lnk` shortcut (pointing to the current exe) in the Startup folder of the current user; unchecking it removes the shortcut. The state is the shortcut itself, so it is not stored in `vcomhub.ini`, and deleting the shortcut by hand is reflected the next time Setup opens. Debug CLI: `mapping option runatlogon on|off`. VComHub needs administrator rights; if Windows does not start it at sign-in, use a Task Scheduler task instead (trigger "At log on", "Run with highest privileges").
+- **Run at Windows startup** option added to Setup.
 
 ### 0.7.29 (2026-10-23)
 
-- **New version check and self-update**: tray menu **Check for updates...** looks up the latest release over HTTPS, shows the release notes link and **asks before downloading**. The download is verified (SHA-256, size, file type), then the exe is replaced in its own folder and VComHub restarts. If the folder is not writable, it tells you and stops without changing anything.
-- **AutoUpgrade**: new Setup checkbox (`[Hub] AutoUpgrade`, default off). When on, VComHub checks for a new version at launch once a month; it still asks before downloading. The time of the last check is kept in `[Hub] LastUpdateCheck`.
-- Debug CLI: `update status | check | apply`, `mapping option autoupgrade on|off`.
+- **Update check and self-update**: The tray menu checks for new releases over HTTPS, asks for confirmation before downloading, and verifies the download (checksum, size, file type) before replacing the application.
+- **Automatic monthly check** available as an option, off by default.
 
 ### 0.7.28 (2026-10-23)
 
-- **Connect UDP VCOMs by dragging**: drag one UDP VCOM onto another on the same PC and they are connected (each gets the other's `127.0.0.1:<local port>` as a peer). One-to-many (star) and many-to-many (mesh) links are made by connecting several. `auto` picks a free local UDP port; connections bound to loopback only are not exposed to the network. Debug CLI: `udp connect|disconnect <A> <B>`, `udp add <COM> auto`.
-- **Share a physical COM over UDP**: drag a UDP VCOM onto a physical COM (or its virtual COM). Data from the device goes to the virtual COMs and to the UDP peers, and UDP data is written to the device. Only registered peers are accepted. The relay speed is applied when the physical COM is opened. When the last connection is removed the virtual COM becomes an ordinary one again.
+- **Drag-and-drop UDP linking**: Connect UDP virtual COM ports by dragging them together. Supports one-to-many and many-to-many topologies; loopback-only links are not exposed to the network.
+- **Physical COM sharing over UDP**: Relay a physical device to registered UDP peers and back. Only registered peers are accepted.
 
 ### 0.6.20 (2026-10-21)
 
-- **UDP virtual COM ports**: create UDP-backed COM ports from Setup or the Debug CLI. Each one binds a unique local UDP port, forwards received datagrams to its open serial program, and sends serial writes to multiple configured IP:port peers. An empty peer list makes a receive-only port. Serial settings default to `115200 8 N 1`; they are accepted for COM compatibility but do not change UDP transport.
-- Setup displays UDP VCOMs and their peers in a tree and supports adding, editing, and deleting profiles. The Debug CLI supports `udp list`, `udp add`, `udp set`, and `udp remove`.
-- Physical COM device-change notifications no longer mark UDP VCOMs disconnected. Added diagnostics for COM open requests, control-channel attachment, and returned Windows error codes.
-- The first-run `vcomhub.ini` includes help and a sample as `#` comments, including optional keys and defaults. The earlier `;` comment still works, and Setup preserves comments when saving.
+- **UDP virtual COM ports**: Create COM ports backed by UDP, with multiple destinations or receive-only mode, managed in Setup.
+- Fixed UDP virtual COM ports being marked as disconnected by physical device events. Expanded diagnostics for port-open requests.
+- The first-run configuration file now includes inline help and a sample.
 
 ### 0.6.18 (2026-10-15)
 
-- **Hang prevention**: Stop and Exit always finish. Exit escalates in three steps (normal stop → force-delete virtual COM that is still in use → forced close). If it had to be forced, the next launch shows a notice and a `.exit.log` file next to the ini says what to check. New `[Hub] ExitTimeoutMs` (3000–120000). A physical COM that does not respond is abandoned instead of blocking the others.
-- **Device loss and reconnect**: when a physical COM is unplugged (including USB drivers that keep returning success, such as Prolific), the tray tells you; the group reconnects automatically when the device comes back. Other groups keep working.
-- **Missing physical COM at Start**: that mapping is skipped (its virtual COM is not created) and the others start; it is connected automatically when the device appears.
-- Operations that overlap (for example Start while Stopping) answer "Busy" instead of waiting; the status text shows *Stopping*.
-- First run with an empty mapping no longer tries to AutoStart and shows a clear message instead.
-- Debug mode writes `vcomhub.debug.log` next to the exe (open/close/error/reconnect events and device-change notifications, no data bytes).
-- Debug CLI: `sim hang <COM> ctl|write|close on|off` for testing hang handling (with `--sim`).
+- **Hang prevention**: Stop and Exit always complete. Exit escalates in stages; if a forced close was needed, the next launch reports it together with a record of what to check.
+- **Device loss recovery**: Unplugged physical COM ports are reported in the tray and reconnect automatically when the device returns, including USB drivers that keep reporting success after removal. Other ports are unaffected.
+- **Start with missing devices**: Mappings for absent physical COM ports are skipped and connected automatically once the device appears.
+- Clearer handling of overlapping operations and of a first run without mappings.
 
 ### 0.6.11 (2026-10-08)
 
-- Tray menu **About...**: version, build time, developer, homepage.
-- Version is now generated from the commit count; Debug builds show a trailing `d`.
+- About dialog showing version, build time, developer and homepage.
+- Version is generated automatically from the source commit count; Debug builds are marked.
 
 ### 0.6.10 (2026-10-08)
 
-- Setup window layout fix: the buttons are no longer overlapped by the port list (taller window, clipped child controls).
-- Single executable with the driver package embedded; automatic elevation to administrator.
-- Several physical COM ports at once, each with several virtual COM ports; transparent relay of baud rate, line control, timeouts and modem lines.
-- Tray icon with RX (red) / TX (blue) blinking and a tooltip with byte counts.
-- Setup window, `AutoStart`, English / Korean UI (`language.json`), Debug CLI.
-- Software Bill of Materials (`.sbom.json`) for each exe.
+- Single executable with embedded driver package and automatic elevation to administrator.
+- Multiple physical COM ports, each with multiple virtual COM ports; transparent relay of baud rate, line control, timeouts and modem signals.
+- Tray icon with RX/TX activity indicators and a byte-count tooltip.
+- Setup window, automatic start, English/Korean interface and Debug CLI. A software bill of materials is published with each build. Fixed Setup button layout.
 
 ## Contact
 
@@ -698,7 +695,7 @@ StopBits=1
 | 시리얼 프로그램이 실제 COM 을 열지 못함 | 실행 중에는 VComHub 가 단독으로 엽니다. 가상 COM 을 열거나 중지하세요. |
 | UDP 로컬 포트 중복 또는 바인드 오류로 시작 실패 | 설정 창이나 `vcomhub.ini`에서 `LocalPort`를 변경하세요. 각 UDP VCOM마다 고유한 로컬 포트(1–65535)를 사용해야 하며, PC의 다른 프로그램이 해당 포트를 점유하고 있지 않아야 합니다. |
 | 원격 주소(Peer) 형식 오류로 시작 실패 | 콜론으로 구분된 IPv4 주소와 UDP 포트를 모두 입력해야 합니다(예: `192.168.1.30:5001`). 포트가 누락된 IP 단독 입력은 거부됩니다. |
-| UDP VCOM 을 열 때 오류 1167 | VComHub 0.6.20 이상을 사용하세요. Debug 모드에서는 exe 옆 `vcomhub.debug.log` 에 UDP 소켓과 COM 열기 상태가 기록됩니다. |
+| UDP VCOM 을 열 때 오류 1167 | VComHub 0.6.20 이상을 사용하세요. 로그(기본 꺼짐, 필요하면 `LogLevel=info` 또는 `debug`)가 exe 옆 `log` 폴더에 UDP 소켓과 COM 열기 상태를 기록합니다. |
 | UDP 데이터가 수신되지 않음 | Windows 방화벽 및 피어 간 네트워크 방화벽에서 UDP VCOM의 로컬 포트 인바운드를 허용했는지 확인하세요. UDP VCOM이 설정되어 있으면 실행 시 VComHub가 방화벽 인바운드 규칙 추가 여부를 묻거나, 수동으로 규칙을 허용할 수 있습니다. |
 | 트레이 아이콘이 안 보임 | 숨겨진 아이콘(`^`)을 확인하세요. 프로그램은 하나만 실행되며 두 번째 실행은 아무 일도 하지 않습니다. |
 | 화면이나 메시지 언어가 다름 | `vcomhub.ini` 의 `Language=`(`en` 또는 `ko`)를 고치거나 설정 창의 **Language** 드롭다운에서 고르세요. 바로 적용됩니다. |
@@ -717,58 +714,53 @@ Release 빌드는 `vcomhub-<버전>.exe` 와 `.sbom.json` 을 배포 저장소�
 
 ## 버전 기록
 
-버전은 `<major>.<minor>.<커밋 수>` 이므로 소스 저장소에서 변경이 생길 때마다 마지막 숫자가 늘어납니다. 최신 버전이 위에 있습니다. 배포하지 않은 버전(0.6.12 ~ 0.6.17, 0.7.30, 0.7.32)의 변경은 다음 배포 버전에 포함되어 있습니다.
+버전은 major.minor.patch.build 형식이며, build 는 소스 저장소의 커밋 수입니다. 0.7.33 까지는 major.minor.build 형식이었습니다. 최신 버전이 위에 있습니다. 배포하지 않은 빌드(0.6.12 ~ 0.6.17, 0.7.30, 0.7.32)의 변경은 다음 배포 버전에 포함되어 있습니다.
+
+### 0.8.1.35 (2026-11-20)
+
+- 디버깅을 위한 기능 추가
 
 ### 0.7.33 (2026-11-03)
 
-- **설정 창에서 언어 선택**: **Language** 드롭다운에 번역 파일에 있는 모든 언어가 나옵니다. 선택하면 `[Hub] Language` 에 저장되고 설정 창과 트레이 메뉴에 **즉시** 적용됩니다(재시작 불필요). Debug CLI: `mapping option language <코드>`.
-- **번역 파일 이름을 `VComHub_len.json` 으로 변경**했습니다(예전 이름은 너무 일반적이라 다른 프로그램과 겹칠 수 있었습니다). 없으면 처음 실행할 때 exe 옆에 만들어지는 것은 같습니다. 예전 `language.json` 은 더 이상 읽지 않으므로 직접 언어를 추가했다면 `VComHub_len.json` 으로 옮기세요.
-- **한국어 코드를 `kr` 에서 `ko`**(표준 언어 코드)로 바꿨습니다. 기존 `vcomhub.ini` 의 `Language=kr` 과 예전 번역 파일의 `"kr"` 섹션도 그대로 동작합니다.
-- **Windows 시작 시 실행**을 시작 프로그램 바로가기 대신 작업 스케줄러 작업("로그온할 때" 트리거, "가장 높은 권한으로 실행")으로 등록합니다. 관리자 권한 때문에 실행이 막히지 않습니다. 예전 시작 프로그램 바로가기와 Run 키는 자동으로 정리합니다.
-- 배포하지 않은 0.7.32 의 변경을 포함합니다.
+- **설정 창에서 언어 선택**: 재시작 없이 즉시 적용됩니다.
+- **번역 파일 이름 변경**: VComHub_len.json 으로 변경했습니다. 예전 파일에 직접 추가한 언어는 옮겨야 합니다. 한국어 코드는 표준인 ko 로 변경했으며 기존 kr 설정도 계속 동작합니다.
+- **Windows 시작 시 실행**: 시작 프로그램 바로가기 대신 최고 권한의 작업 스케줄러 작업으로 등록합니다. 기존 항목은 자동으로 정리됩니다.
 
 ### 0.7.31 (2026-10-23)
 
-- **Windows 시작 시 실행**: 설정 창에 체크박스를 추가했습니다. 체크하면 현재 사용자의 시작 프로그램 폴더에 현재 exe 를 가리키는 `VComHub.lnk` 바로가기를 만들고, 해제하면 지웁니다. 상태는 바로가기 파일 자체이므로 `vcomhub.ini` 에는 저장하지 않으며, 바로가기를 직접 지워도 다음에 설정 창을 열 때 반영됩니다. Debug CLI: `mapping option runatlogon on|off`. VComHub 는 관리자 권한이 필요하므로 Windows 가 로그인 때 실행하지 않으면 작업 스케줄러("로그온할 때" 트리거, "가장 높은 권한으로 실행")를 대신 쓰세요.
+- 설정 창에 **Windows 시작 시 실행** 옵션을 추가했습니다.
 
 ### 0.7.29 (2026-10-23)
 
-- **새 버전 확인과 자체 업데이트**: 트레이 메뉴 **새 버전 확인...**(영어 모드는 *Check for updates...*)이 HTTPS 로 최신 릴리스를 조회하고, 릴리스 노트 링크를 보여 주며 **받기 전에 묻습니다**. 받은 파일은 SHA-256, 크기, 파일 형식을 검증한 뒤 exe 가 있는 폴더에서 exe 를 교체하고 VComHub 를 다시 시작합니다. 폴더에 쓸 수 없으면 아무것도 바꾸지 않고 안내한 뒤 멈춥니다.
-- **AutoUpgrade**: 설정 창 체크박스 추가(`[Hub] AutoUpgrade`, 기본 꺼짐). 켜면 실행할 때 한 달에 한 번 새 버전을 확인하며, 받기 전에는 여전히 묻습니다. 마지막 확인 시각은 `[Hub] LastUpdateCheck` 에 기록합니다.
-- Debug CLI: `update status | check | apply`, `mapping option autoupgrade on|off`.
+- **새 버전 확인과 자체 업데이트**: 트레이 메뉴에서 HTTPS 로 최신 릴리스를 확인하고, 받기 전에 확인을 요청하며, 받은 파일을 검증(체크섬, 크기, 파일 형식)한 뒤 교체합니다.
+- **월 1회 자동 확인** 옵션을 추가했습니다(기본 꺼짐).
 
 ### 0.7.28 (2026-10-23)
 
-- **드래그로 UDP VCOM 연결**: 같은 PC 의 UDP VCOM 하나를 다른 UDP VCOM 위로 끌어 놓으면 서로 연결됩니다(상대의 `127.0.0.1:<로컬 포트>` 가 피어로 들어갑니다). 여러 개를 연결해 1:N(스타), N:N(메시)을 만듭니다. `auto` 는 비어 있는 로컬 UDP 포트를 고르며, loopback 끼리만 연결된 포트는 네트워크에 노출되지 않습니다. Debug CLI: `udp connect|disconnect <A> <B>`, `udp add <COM> auto`.
-- **실제 COM 을 UDP 로 공유**: UDP VCOM 을 실제 COM(또는 그 가상 COM) 위로 끌어 놓습니다. 장치에서 온 데이터는 가상 COM 과 UDP 피어 양쪽으로, UDP 로 들어온 데이터는 장치로 전달됩니다. 등록된 피어의 데이터만 받습니다. 중계 속도는 실제 COM 을 열 때 적용됩니다. 마지막 연결이 사라지면 그 가상 COM 은 일반 가상 COM 으로 돌아갑니다.
+- **드래그로 UDP 연결**: UDP 가상 COM 을 끌어다 놓아 서로 연결합니다. 1:N, N:N 구성을 지원하며 loopback 전용 연결은 네트워크에 노출되지 않습니다.
+- **실제 COM 의 UDP 공유**: 실제 장치의 데이터를 등록된 UDP 피어와 주고받습니다. 등록된 피어의 데이터만 받습니다.
 
 ### 0.6.20 (2026-10-21)
 
-- **UDP 가상 COM 지원**: 설정 창이나 Debug CLI에서 UDP 방식 가상 COM을 만들 수 있습니다. 각 포트는 중복되지 않는 로컬 UDP 포트를 사용하고, 수신된 데이터그램은 열린 시리얼 프로그램으로 전달하며, 시리얼 프로그램이 보낸 데이터는 설정된 여러 IP:포트 peer로 전송합니다. peer가 없으면 수신 전용입니다. 시리얼 설정 기본값은 `115200 8 N 1`이며 UDP 전송 방식에는 영향을 주지 않습니다.
-- 설정 창 트리에 UDP VCOM과 peer 목록을 표시하며 추가·수정·삭제할 수 있습니다. Debug CLI에 `udp list`, `udp add`, `udp set`, `udp remove` 명령을 추가했습니다.
-- 물리 COM 장치 변경 알림이 UDP VCOM을 연결 끊김으로 표시하던 문제를 수정했습니다. COM 열기 요청, 제어 채널 연결, Windows 오류 코드 진단 로그를 추가했습니다.
-- 처음 실행할 때 만드는 `vcomhub.ini` 에 `#` 주석으로 키 설명과 기본값, 포트 매핑 샘플을 넣었습니다. 기존 `;` 주석도 동작하며 설정 창에서 저장해도 주석을 유지합니다.
+- **UDP 가상 COM 포트**: UDP 기반 COM 포트를 만들 수 있습니다. 여러 목적지 전송과 수신 전용을 지원하며 설정 창에서 관리합니다.
+- 물리 장치 이벤트로 UDP 가상 COM 이 연결 끊김으로 표시되던 문제를 수정하고, 포트 열기 요청 진단을 보강했습니다.
+- 첫 실행 시 만드는 설정 파일에 도움말과 샘플을 포함했습니다.
 
 ### 0.6.18 (2026-10-15)
 
-- **행(hang) 방지**: 중지와 종료는 항상 끝납니다. 종료는 3단계로 단계적으로 강해집니다(정상 중지 → 사용 중인 가상 COM 강제 삭제 → 강제 닫기). 강제로 닫았다면 다음 실행 때 알려 주고, ini 옆의 `.exit.log` 파일에 확인할 내용이 남습니다. `[Hub] ExitTimeoutMs`(3000~120000) 추가. 응답이 없는 실제 COM 은 다른 그룹을 막지 않고 포기합니다.
-- **장치 분리와 재연결**: 실제 COM 이 뽑히면(분리돼도 성공을 계속 돌려주는 Prolific 같은 USB 드라이버 포함) 트레이로 알려 주고, 장치가 돌아오면 그 그룹을 자동으로 다시 연결합니다. 다른 그룹은 계속 동작합니다.
-- **시작할 때 실제 COM 이 없는 경우**: 그 매핑만 건너뛰고(가상 COM 은 만들지 않음) 나머지는 시작하며, 장치가 나타나면 자동으로 연결합니다.
-- 겹치는 작업(예: 중지 중에 시작)은 기다리지 않고 "작업 중" 안내를 하며, 상태 문구에 *Stopping* 이 표시됩니다.
-- 매핑이 비어 있는 첫 실행에서는 AutoStart 를 시도하지 않고 분명한 메시지를 보여 줍니다.
-- Debug 모드에서 exe 옆에 `vcomhub.debug.log` 를 기록합니다(열기/닫기/오류/재연결 이벤트와 장치 변경 알림, 데이터 바이트는 기록하지 않음).
-- Debug CLI: 행 처리 테스트용 `sim hang <COM> ctl|write|close on|off` (`--sim` 에서).
+- **행(hang) 방지**: 중지와 종료는 항상 완료됩니다. 종료는 단계적으로 강해지며, 강제로 닫은 경우 다음 실행 때 안내하고 확인할 내용을 기록합니다.
+- **장치 분리 복구**: 실제 COM 분리를 트레이로 알리고 장치가 돌아오면 자동으로 재연결합니다. 분리 후에도 성공을 반환하는 USB 드라이버를 포함하며, 다른 포트는 영향을 받지 않습니다.
+- **장치 없이 시작**: 없는 실제 COM 의 매핑은 건너뛰고, 장치가 나타나면 자동으로 연결합니다.
+- 작업이 겹치는 경우와 매핑이 없는 첫 실행에 대한 안내를 개선했습니다.
 
 ### 0.6.11 (2026-10-08)
 
-- 트레이 메뉴 **정보...**(About): 버전, 빌드 시각, 개발자, 홈페이지.
-- 버전을 커밋 수로 자동 생성합니다. Debug 빌드는 끝에 `d` 가 붙습니다.
+- 버전, 빌드 시각, 개발자, 홈페이지를 보여 주는 정보 창을 추가했습니다.
+- 버전을 커밋 수로 자동 생성하며 Debug 빌드는 별도로 표시합니다.
 
 ### 0.6.10 (2026-10-08)
 
-- 설정 창 배치 수정: 버튼이 포트 목록에 가려지지 않습니다(창 높이 확대, 자식 컨트롤 클리핑).
-- 드라이버 패키지를 내장한 단일 exe, 관리자 권한 자동 요청.
-- 여러 실제 COM 을 동시에 처리하고 각각에 여러 가상 COM 을 연결. 보드레이트, 라인 제어, 타임아웃, 모뎀 신호를 투명하게 중계.
-- RX(빨강)/TX(파랑)로 깜빡이는 트레이 아이콘과 누적 바이트 툴팁.
-- 설정 창, `AutoStart`, 영어/한국어 UI(`language.json`), Debug CLI.
-- exe 마다 소프트웨어 자재 명세서(`.sbom.json`).
+- 드라이버 패키지를 내장한 단일 exe 와 관리자 권한 자동 요청.
+- 여러 실제 COM 과 각각의 여러 가상 COM 지원. 보드레이트, 라인 제어, 타임아웃, 모뎀 신호를 투명하게 중계.
+- RX/TX 점멸 트레이 아이콘과 누적 바이트 툴팁.
+- 설정 창, 자동 시작, 영어/한국어 UI, Debug CLI. 빌드마다 소프트웨어 자재 명세서 배포. 설정 창 버튼 배치 수정.
