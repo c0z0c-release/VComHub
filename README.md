@@ -331,6 +331,11 @@ Release builds put `vcomhub-<version>.exe` and its `.sbom.json` in the `release`
 
 Version numbers follow major.minor.patch.build, where the build number is the source commit count. Releases up to 0.7.33 used major.minor.build. Newest first. Builds that were not published (0.6.12 – 0.6.17, 0.7.30, 0.7.32) are included in the next published release.
 
+### 0.8.2.36 (2026-11-24)
+
+- **Stabilization.**
+- Start now works even when there are no mappings (nothing is relayed until you add one in Setup and press Apply). Removing every mapping in Setup and applying no longer fails with an error.
+
 ### 0.8.1.35 (2026-11-20)
 
 - Added features for debugging.
@@ -715,6 +720,11 @@ Release 빌드는 `vcomhub-<버전>.exe` 와 `.sbom.json` 을 배포 저장소�
 ## 버전 기록
 
 버전은 major.minor.patch.build 형식이며, build 는 소스 저장소의 커밋 수입니다. 0.7.33 까지는 major.minor.build 형식이었습니다. 최신 버전이 위에 있습니다. 배포하지 않은 빌드(0.6.12 ~ 0.6.17, 0.7.30, 0.7.32)의 변경은 다음 배포 버전에 포함되어 있습니다.
+
+### 0.8.2.36 (2026-11-24)
+
+- **안정화.**
+- 매핑이 하나도 없어도 시작할 수 있습니다(Setup 에서 매핑을 추가하고 적용하기 전까지는 중계하지 않습니다). Setup 에서 매핑을 모두 지우고 적용해도 오류가 나지 않습니다.
 
 ### 0.8.1.35 (2026-11-20)
 
