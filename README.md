@@ -331,9 +331,14 @@ Release builds put `vcomhub-<version>.exe` and its `.sbom.json` in the `release`
 
 Version numbers follow major.minor.patch.build, where the build number is the source commit count. Releases up to 0.7.33 used major.minor.build. Newest first. Builds that were not published (0.6.12 – 0.6.17, 0.7.30, 0.7.32) are included in the next published release.
 
+### 0.8.6 (2026-11-26)
+
+- **Upgrade failure guidance.** When an update cannot be installed automatically (for example the program folder is not writable, the release has no downloadable file with a checksum, or the download fails the size/type/checksum check), the message says why and gives the release page address so you can download it manually. The running program is left unchanged.
+
 ### 0.8.5.41 (2026-11-26)
 
 - **Stabilization.**
+- **Clearer update errors.** When GitHub refuses an update check or download, the message now matches the cause (request limit reached with the time to retry, release not found, request refused, GitHub temporarily unavailable) instead of only showing the HTTP status.
 
 ### 0.8.4 (2026-11-26)
 
@@ -734,9 +739,14 @@ Release 빌드는 `vcomhub-<버전>.exe` 와 `.sbom.json` 을 배포 저장소�
 
 버전은 major.minor.patch.build 형식이며, build 는 소스 저장소의 커밋 수입니다. 0.7.33 까지는 major.minor.build 형식이었습니다. 최신 버전이 위에 있습니다. 배포하지 않은 빌드(0.6.12 ~ 0.6.17, 0.7.30, 0.7.32)의 변경은 다음 배포 버전에 포함되어 있습니다.
 
+### 0.8.6 (2026-11-26)
+
+- **업그레이드 실패 안내.** 업데이트를 자동으로 설치할 수 없을 때(예: 프로그램 폴더에 쓸 수 없음, 릴리스에 체크섬이 있는 받을 파일이 없음, 받은 파일이 크기/형식/체크섬 검사를 통과하지 못함) 원인과 함께 릴리스 페이지 주소를 알려 주어 직접 받을 수 있게 했습니다. 실행 중인 프로그램은 바뀌지 않습니다.
+
 ### 0.8.5.41 (2026-11-26)
 
 - **안정화.**
+- **업데이트 오류 안내 개선.** GitHub가 업데이트 확인이나 다운로드를 거절하면 HTTP 상태만 보이지 않고 원인(요청 횟수 제한과 다시 시도할 시각, 릴리스를 찾을 수 없음, 요청 거절, GitHub 일시 장애)에 맞는 안내를 보입니다.
 
 ### 0.8.4 (2026-11-26)
 
