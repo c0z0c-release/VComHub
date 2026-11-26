@@ -331,6 +331,10 @@ Release builds put `vcomhub-<version>.exe` and its `.sbom.json` in the `release`
 
 Version numbers follow major.minor.patch.build, where the build number is the source commit count. Releases up to 0.7.33 used major.minor.build. Newest first. Builds that were not published (0.6.12 – 0.6.17, 0.7.30, 0.7.32) are included in the next published release.
 
+### 0.8.4 (2026-11-26)
+
+- **Tray menu no longer hidden.** The tray icon menu is shown on top of other topmost windows (such as the taskbar) and is kept inside the work area.
+
 ### 0.8.3 (2026-11-26)
 
 - **Virtual COM reuse on Apply.** Unchanged mappings are no longer disconnected, and programs keep their virtual COM open even when a mapping changes. A virtual COM still in use no longer makes Apply fail.
@@ -725,6 +729,10 @@ Release 빌드는 `vcomhub-<버전>.exe` 와 `.sbom.json` 을 배포 저장소�
 ## 버전 기록
 
 버전은 major.minor.patch.build 형식이며, build 는 소스 저장소의 커밋 수입니다. 0.7.33 까지는 major.minor.build 형식이었습니다. 최신 버전이 위에 있습니다. 배포하지 않은 빌드(0.6.12 ~ 0.6.17, 0.7.30, 0.7.32)의 변경은 다음 배포 버전에 포함되어 있습니다.
+
+### 0.8.4 (2026-11-26)
+
+- **트레이 메뉴 가림 수정.** 트레이 아이콘 메뉴를 작업 표시줄 등 다른 최상위(topmost) 창 위에 표시하고, 작업 영역 안에 놓이도록 했습니다.
 
 ### 0.8.3 (2026-11-26)
 
